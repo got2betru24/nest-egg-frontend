@@ -1,0 +1,29 @@
+name: nest-egg
+services:
+  frontend:
+    container_name: nest-egg-frontend
+    image: nest-egg-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-dev
+    volumes:
+      - ./:/app/frontend
+      - /app/frontend/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://nest-egg.local/api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nest-egg-frontend.rule=Host(`nest-egg.local`)"
+      - "traefik.http.routers.nest-egg-frontend.priority=1"
+      - "traefik.http.services.nest-egg-frontend.loadbalancer.server.port=5173"
+      - "traefik.http.routers.nest-egg-frontend.entrypoints=web"
+    expose:
+      - 5173
+    networks:
+      - traefik-network
+    restart: unless-stopped
+
+networks:
+  traefik-network:
+    external: true

@@ -1,0 +1,27 @@
+# Environment and secrets - never goes into the image
+.env
+
+# Node artifacts
+node_modules/
+frontend/node_modules/
+
+# Git
+.git/
+.gitignore
+
+# Docker files themselves
+Dockerfile
+compose.yaml
+docker-compose.yml
+
+# IDE
+.vscode/
+.idea/
+.devcontainer/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# README
+*.md
