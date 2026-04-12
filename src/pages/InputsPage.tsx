@@ -9,6 +9,7 @@ import {
   Box, Typography, Grid, TextField, Switch, FormControlLabel,
   Slider, Divider, Collapse, IconButton, Tooltip, Button,
   InputAdornment, Select, MenuItem, FormControl, InputLabel, Alert,
+  Snackbar,
 } from '@mui/material'
 import {
   ExpandMore as ExpandIcon,
@@ -18,8 +19,8 @@ import {
 } from '@mui/icons-material'
 import { useInputStore } from '../store/inputStore'
 import { useUIStore } from '../store/uiStore'
-import { assumptionsApi, accountApi, contributionApi } from '../api'
-import type { AccountType } from '../types'
+import { assumptionsApi, accountApi, contributionApi, personApi } from '../api'
+import type { AccountType, AssumptionsCreate } from '../types'
 
 // ---------------------------------------------------------------------------
 // Section wrapper
@@ -269,20 +270,159 @@ function AccountRow({ accountType }: AccountRowProps) {
 
 export function InputsPage() {
   const {
-    scenarioId, primary, spouse, assumptions,
-    accounts, contributions,
-    setAssumptions, setContribution, markDirty,
+    scenarioId, primary, spouse, assumptions, accounts, contributions,
+    setPrimary, setSpouse, setAssumptions, setAccount, setContribution, markDirty, markClean,
   } = useInputStore()
+
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [snackMsg, setSnackMsg] = useState<string | null>(null)
 
-  // Derive contribution values from store (keyed by account_id)
-  const trad401kAccount = accounts['traditional_401k']
-  const roth401kAccount = accounts['roth_401k']
-  const rothIraAccount  = accounts['roth_ira']
+  // Local person fields (birth years + retirement ages)
+  const [primaryBirthYear,   setPrimaryBirthYear]   = useState(primary?.birth_year            ?? new Date().getFullYear() - 45)
+  const [primaryRetireAge,   setPrimaryRetireAge]   = useState(primary?.planned_retirement_age ?? 55)
+  const [spouseBirthYear,    setSpouseBirthYear]    = useState(spouse?.birth_year              ?? new Date().getFullYear() - 41)
+  const [spouseRetireAge,    setSpouseRetireAge]    = useState(spouse?.planned_retirement_age  ?? 55)
 
-  const trad401kContrib  = trad401kAccount  ? contributions[trad401kAccount.id]  : null
-  const roth401kContrib  = roth401kAccount  ? contributions[roth401kAccount.id]  : null
-  const rothIraContrib   = rothIraAccount   ? contributions[rothIraAccount.id]   : null
+  // Contribution field helpers
+  const trad401kAccount  = accounts['traditional_401k']
+  const roth401kAccount  = accounts['roth_401k']
+  const rothIraAccount   = accounts['roth_ira']
+  const trad401kContrib  = trad401kAccount ? contributions[trad401kAccount.id] : null
+  const roth401kContrib  = roth401kAccount ? contributions[roth401kAccount.id] : null
+  const rothIraContrib   = rothIraAccount  ? contributions[rothIraAccount.id]  : null
+
+  if (!scenarioId) {
+    return (
+      <Box sx={{ maxWidth: 600 }}>
+        <Alert severity="info">
+          No scenario loaded. Use the scenario menu in the top bar to create or load one.
+        </Alert>
+      </Box>
+    )
+  }
+
+  // ---------------------------------------------------------------------------
+  // Save persons
+  // ---------------------------------------------------------------------------
+  const savePersons = async () => {
+    // Primary
+    if (primary) {
+      const updated = await personApi.update(primary.id, {
+        role: 'primary',
+        birth_year: primaryBirthYear,
+        planned_retirement_age: primaryRetireAge,
+      })
+      setPrimary(updated)
+    } else {
+      const created = await personApi.create(scenarioId, {
+        role: 'primary',
+        birth_year: primaryBirthYear,
+        planned_retirement_age: primaryRetireAge,
+      })
+      setPrimary(created)
+    }
+
+    // Spouse
+    if (spouse) {
+      const updated = await personApi.update(spouse.id, {
+        role: 'spouse',
+        birth_year: spouseBirthYear,
+        planned_retirement_age: spouseRetireAge,
+      })
+      setSpouse(updated)
+    } else {
+      // Always create spouse for MFJ planning
+      const created = await personApi.create(scenarioId, {
+        role: 'spouse',
+        birth_year: spouseBirthYear,
+        planned_retirement_age: spouseRetireAge,
+      })
+      setSpouse(created)
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Save assumptions
+  // ---------------------------------------------------------------------------
+  const saveAssumptions = async () => {
+    if (!assumptions) return
+    const body: AssumptionsCreate = {
+      inflation_rate: assumptions.inflation_rate,
+      plan_to_age: assumptions.plan_to_age,
+      filing_status: 'married_filing_jointly',
+      current_income: assumptions.current_income,
+      desired_retirement_income: assumptions.desired_retirement_income,
+      healthcare_annual_cost: assumptions.healthcare_annual_cost,
+      enable_catchup_contributions: assumptions.enable_catchup_contributions,
+      enable_roth_ladder: assumptions.enable_roth_ladder,
+      return_scenario: assumptions.return_scenario,
+    }
+    const saved = await assumptionsApi.upsert(scenarioId, body)
+    setAssumptions(saved)
+  }
+
+  // ---------------------------------------------------------------------------
+  // Save all accounts + contributions
+  // ---------------------------------------------------------------------------
+  const saveAccounts = async () => {
+    const allTypes: AccountType[] = ['hysa', 'brokerage', 'roth_ira', 'traditional_401k', 'roth_401k']
+    for (const type of allTypes) {
+      const acct = accounts[type]
+      if (!acct) continue
+      const saved = await accountApi.upsert(scenarioId, {
+        account_type: type,
+        label: acct.label ?? undefined,
+        current_balance: acct.current_balance,
+        return_conservative: acct.return_conservative,
+        return_base: acct.return_base,
+        return_optimistic: acct.return_optimistic,
+      })
+      setAccount(saved)
+
+      // Save contribution if it exists for this account
+      const contrib = contributions[acct.id]
+      if (contrib) {
+        const savedContrib = await contributionApi.upsert(saved.id, {
+          annual_amount: contrib.annual_amount,
+          employer_match_amount: contrib.employer_match_amount,
+          enforce_irs_limits: contrib.enforce_irs_limits,
+          solve_mode: contrib.solve_mode,
+        })
+        setContribution(savedContrib)
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Save everything
+  // ---------------------------------------------------------------------------
+  const handleSaveAll = async () => {
+    setSaveStatus('saving')
+    try {
+      await savePersons()
+      await saveAssumptions()
+      await saveAccounts()
+      markClean()
+      setSaveStatus('saved')
+      setSnackMsg('All inputs saved.')
+      setTimeout(() => setSaveStatus('idle'), 2500)
+    } catch (err) {
+      setSaveStatus('error')
+      setSnackMsg(err instanceof Error ? err.message : 'Save failed — check the console.')
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+  const updateAssumption = <K extends keyof NonNullable<typeof assumptions>>(
+    key: K,
+    value: NonNullable<typeof assumptions>[K],
+  ) => {
+    if (!assumptions) return
+    setAssumptions({ ...assumptions, [key]: value })
+    markDirty()
+  }
 
   const updateContrib = async (
     account: typeof trad401kAccount,
@@ -295,7 +435,7 @@ export function InputsPage() {
       annual_amount: existing?.annual_amount ?? 0,
       employer_match_amount: existing?.employer_match_amount ?? 0,
       enforce_irs_limits: existing?.enforce_irs_limits ?? true,
-      solve_mode: existing?.solve_mode ?? 'fixed' as const,
+      solve_mode: (existing?.solve_mode ?? 'fixed') as 'fixed' | 'solve_for',
       [field]: value,
     }
     try {
@@ -303,63 +443,18 @@ export function InputsPage() {
       setContribution(saved)
       markDirty()
     } catch {
-      // Optimistically update store even if save fails; user will retry on Run
       setContribution({ ...updated, id: existing?.id ?? 0, account_id: account.id })
       markDirty()
     }
   }
 
-  if (!scenarioId) {
-    return (
-      <Box sx={{ maxWidth: 600 }}>
-        <Alert severity="info">
-          No scenario loaded. Use the scenario menu in the top bar to create or load one.
-        </Alert>
-      </Box>
-    )
-  }
-
-  const handleSaveAssumptions = async () => {
-    if (!assumptions || !scenarioId) return
-    setSaveStatus('saving')
-    try {
-      await assumptionsApi.upsert(scenarioId, {
-        inflation_rate: assumptions.inflation_rate,
-        plan_to_age: assumptions.plan_to_age,
-        filing_status: 'married_filing_jointly',
-        current_income: assumptions.current_income,
-        desired_retirement_income: assumptions.desired_retirement_income,
-        healthcare_annual_cost: assumptions.healthcare_annual_cost,
-        enable_catchup_contributions: assumptions.enable_catchup_contributions,
-        enable_roth_ladder: assumptions.enable_roth_ladder,
-        return_scenario: assumptions.return_scenario,
-      })
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
-    } catch {
-      setSaveStatus('error')
-    }
-  }
-
-  const updateAssumption = <K extends keyof typeof assumptions>(
-    key: K,
-    value: (typeof assumptions)[K]
-  ) => {
-    if (!assumptions) return
-    setAssumptions({ ...assumptions, [key]: value })
-    markDirty()
-  }
-
-  const currentAge = primary ? new Date().getFullYear() - primary.birth_year : 45
-  const retirementAge = primary?.planned_retirement_age ?? 55
+  const currentAge  = new Date().getFullYear() - primaryBirthYear
 
   return (
     <Box className="page-enter" sx={{ maxWidth: 800 }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', mb: 3 }}>
         <Box>
-          <Typography variant="h2" sx={{ fontSize: '1.75rem', mb: 0.5 }}>
-            Inputs
-          </Typography>
+          <Typography variant="h2" sx={{ fontSize: '1.75rem', mb: 0.5 }}>Inputs</Typography>
           <Typography sx={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
             Configure your retirement planning parameters.
           </Typography>
@@ -368,13 +463,19 @@ export function InputsPage() {
           variant="contained"
           size="small"
           startIcon={<SaveIcon fontSize="small" />}
-          onClick={handleSaveAssumptions}
+          onClick={handleSaveAll}
           disabled={saveStatus === 'saving'}
           sx={{ height: 32 }}
         >
-          {saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved ✓' : 'Save'}
+          {saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved ✓' : 'Save All'}
         </Button>
       </Box>
+
+      {saveStatus === 'error' && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setSaveStatus('idle')}>
+          {snackMsg}
+        </Alert>
+      )}
 
       {/* ----------------------------------------------------------------
           Personal
@@ -386,7 +487,8 @@ export function InputsPage() {
             <TextField
               fullWidth
               type="number"
-              value={primary?.birth_year ?? ''}
+              value={primaryBirthYear}
+              onChange={(e) => { setPrimaryBirthYear(Number(e.target.value)); markDirty() }}
               InputProps={{ inputProps: { min: 1940, max: 2000 } }}
               size="small"
             />
@@ -396,52 +498,51 @@ export function InputsPage() {
             <TextField
               fullWidth
               type="number"
-              value={spouse?.birth_year ?? ''}
+              value={spouseBirthYear}
+              onChange={(e) => { setSpouseBirthYear(Number(e.target.value)); markDirty() }}
               InputProps={{ inputProps: { min: 1940, max: 2000 } }}
               size="small"
             />
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FieldLabel
-              label={`Target Retirement Age: ${retirementAge}`}
-              info="The age at which you plan to stop working. Use the projection to test different ages."
+              label={`Your Retirement Age: ${primaryRetireAge}`}
+              info="Age at which you plan to stop working."
             />
             <Slider
-              value={retirementAge}
-              min={50}
-              max={70}
-              step={1}
-              marks={[
-                { value: 50, label: '50' },
-                { value: 55, label: '55' },
-                { value: 60, label: '60' },
-                { value: 65, label: '65' },
-                { value: 70, label: '70' },
-              ]}
+              value={primaryRetireAge}
+              onChange={(_, v) => { setPrimaryRetireAge(v as number); markDirty() }}
+              min={50} max={70} step={1}
+              marks={[50,55,60,65,70].map(v => ({ value: v, label: String(v) }))}
               valueLabelDisplay="auto"
             />
             <Typography sx={{ fontSize: '0.75rem', color: 'var(--text-muted)', mt: 0.5 }}>
-              Current age: {currentAge} · Years until retirement: {retirementAge - currentAge}
+              Current age: {currentAge} · Years until retirement: {Math.max(0, primaryRetireAge - currentAge)}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <FieldLabel
+              label={`Spouse Retirement Age: ${spouseRetireAge}`}
+              info="Spouse's planned retirement age. Can differ from yours."
+            />
+            <Slider
+              value={spouseRetireAge}
+              onChange={(_, v) => { setSpouseRetireAge(v as number); markDirty() }}
+              min={50} max={70} step={1}
+              marks={[50,55,60,65,70].map(v => ({ value: v, label: String(v) }))}
+              valueLabelDisplay="auto"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FieldLabel
               label={`Plan Through Age: ${assumptions?.plan_to_age ?? 90}`}
-              info="The age to plan through for portfolio longevity. 90–95 is a common conservative choice."
+              info="Portfolio longevity target. 90–95 is a common conservative choice."
             />
             <Slider
               value={assumptions?.plan_to_age ?? 90}
               onChange={(_, v) => updateAssumption('plan_to_age', v as number)}
-              min={80}
-              max={100}
-              step={1}
-              marks={[
-                { value: 80, label: '80' },
-                { value: 85, label: '85' },
-                { value: 90, label: '90' },
-                { value: 95, label: '95' },
-                { value: 100, label: '100' },
-              ]}
+              min={80} max={100} step={1}
+              marks={[80,85,90,95,100].map(v => ({ value: v, label: String(v) }))}
               valueLabelDisplay="auto"
             />
           </Grid>
@@ -458,7 +559,7 @@ export function InputsPage() {
               label="Current Household Income"
               value={assumptions?.current_income ?? 0}
               onChange={(v) => updateAssumption('current_income', v)}
-              info="Combined household income. Used for Social Security projections and contribution context."
+              info="Combined household income. Used for Social Security projections."
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -466,7 +567,7 @@ export function InputsPage() {
               label="Desired Retirement Income (today's $)"
               value={assumptions?.desired_retirement_income ?? 0}
               onChange={(v) => updateAssumption('desired_retirement_income', v)}
-              info="What you want to spend annually in retirement, in today's dollars. The model inflates this to future nominal dollars."
+              info="Annual spending target in retirement, in today's dollars. The model inflates this to nominal future dollars."
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -474,7 +575,7 @@ export function InputsPage() {
               label="Inflation Rate"
               value={assumptions?.inflation_rate ?? 0.03}
               onChange={(v) => updateAssumption('inflation_rate', v)}
-              info="Annual inflation assumption. Used to inflate your income target and nominal future values. 2.5–3.5% is typical."
+              info="Annual inflation assumption. 2.5–3.5% is typical."
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -515,7 +616,7 @@ export function InputsPage() {
               label="Traditional 401(k) — Employee"
               value={trad401kContrib?.annual_amount ?? 0}
               onChange={(v) => updateContrib(trad401kAccount, 'annual_amount', v)}
-              info="Your annual employee contribution to the traditional 401(k). IRS limit enforced."
+              info="Your annual employee contribution. IRS limit enforced."
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -523,7 +624,7 @@ export function InputsPage() {
               label="Roth 401(k) — Employee"
               value={roth401kContrib?.annual_amount ?? 0}
               onChange={(v) => updateContrib(roth401kAccount, 'annual_amount', v)}
-              info="Employee contributions to Roth 401(k). Combined with traditional 401(k) cannot exceed IRS limit."
+              info="Combined with traditional 401(k) cannot exceed IRS employee limit."
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -531,7 +632,7 @@ export function InputsPage() {
               label="Employer Match"
               value={trad401kContrib?.employer_match_amount ?? 0}
               onChange={(v) => updateContrib(trad401kAccount, 'employer_match_amount', v)}
-              info="Annual employer 401(k) match. Does not count toward employee contribution limits."
+              info="Annual employer 401(k) match. Does not count toward employee limits."
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -539,7 +640,7 @@ export function InputsPage() {
               label="Roth IRA (Combined Couple)"
               value={rothIraContrib?.annual_amount ?? 0}
               onChange={(v) => updateContrib(rothIraAccount, 'annual_amount', v)}
-              info="Combined backdoor Roth IRA contributions for both spouses. Limit is 2× the IRS individual limit."
+              info="Combined backdoor Roth IRA contributions for both spouses. Limit is 2× the individual IRS limit."
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -547,9 +648,7 @@ export function InputsPage() {
               control={
                 <Switch
                   checked={assumptions?.enable_catchup_contributions ?? false}
-                  onChange={(e) =>
-                    updateAssumption('enable_catchup_contributions', e.target.checked)
-                  }
+                  onChange={(e) => updateAssumption('enable_catchup_contributions', e.target.checked)}
                   size="small"
                 />
               }
@@ -557,8 +656,7 @@ export function InputsPage() {
                 <Box>
                   <Typography sx={{ fontSize: '0.875rem' }}>Enable catch-up contributions</Typography>
                   <Typography sx={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Activates age 50+ IRS catch-up limits automatically. SECURE 2.0 enhanced catch-up
-                    (ages 60–63) applied when applicable.
+                    Activates age 50+ IRS catch-up limits. SECURE 2.0 enhanced catch-up (ages 60–63) applied automatically.
                   </Typography>
                 </Box>
               }
@@ -568,7 +666,7 @@ export function InputsPage() {
       </Section>
 
       {/* ----------------------------------------------------------------
-          Healthcare bridge
+          Healthcare
           ---------------------------------------------------------------- */}
       <Section id="healthcare" title="Healthcare (Pre-Medicare)" defaultOpen={false}>
         <Grid container spacing={2}>
@@ -577,12 +675,12 @@ export function InputsPage() {
               label="Annual Healthcare Cost (today's $)"
               value={assumptions?.healthcare_annual_cost ?? 0}
               onChange={(v) => updateAssumption('healthcare_annual_cost', v)}
-              info="Estimated annual out-of-pocket healthcare cost from retirement until Medicare eligibility at 65. Inflated each year in the model."
+              info="Estimated annual out-of-pocket healthcare cost from retirement until Medicare at 65. Inflated each year in the model."
             />
           </Grid>
         </Grid>
         <Typography sx={{ fontSize: '0.75rem', color: 'var(--text-muted)', mt: 1.5 }}>
-          Applied to years between your retirement age and age 65. After 65, this cost is removed from the income target.
+          Applied to years between your retirement age and age 65. Removed after Medicare eligibility.
         </Typography>
       </Section>
 
@@ -602,8 +700,8 @@ export function InputsPage() {
             <Box>
               <Typography sx={{ fontSize: '0.875rem' }}>Enable Roth conversion ladder</Typography>
               <Typography sx={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Systematically converts traditional 401(k) funds to Roth during low-income retirement
-                years to minimize lifetime taxes. The optimizer determines the optimal amount and bracket ceiling.
+                Converts traditional 401(k) to Roth during low-income retirement years to minimize
+                lifetime taxes. The optimizer determines the optimal amount and bracket ceiling.
               </Typography>
             </Box>
           }
@@ -611,12 +709,18 @@ export function InputsPage() {
         />
         {assumptions?.enable_roth_ladder && (
           <Alert severity="info" sx={{ fontSize: '0.8125rem' }}>
-            The optimizer will determine the optimal conversion amount and bracket ceiling. You can override
-            per-year amounts in the Optimizer view after running it.
+            Run the Optimizer after saving to get the recommended conversion schedule.
+            You can then override per-year amounts in the Optimizer view.
           </Alert>
         )}
       </Section>
 
+      <Snackbar
+        open={snackMsg !== null && saveStatus === 'saved'}
+        autoHideDuration={3000}
+        onClose={() => setSnackMsg(null)}
+        message={snackMsg}
+      />
     </Box>
   )
 }

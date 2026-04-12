@@ -71,12 +71,12 @@ export function SocialSecurityPage() {
     person,
     comp,
     isSpouse,
-    ref: fileInputRef,
+    fileInputRef,
   }: {
     person: typeof primary
     comp: SSClaimingComparison | null
     isSpouse: boolean
-    ref: React.RefObject<HTMLInputElement>
+    fileInputRef: React.RefObject<HTMLInputElement>
   }) => {
     if (!person) return null
     const status = uploadStatus[person.id] ?? 'idle'
@@ -147,8 +147,8 @@ export function SocialSecurityPage() {
       <Typography sx={{ color: 'var(--text-secondary)', fontSize: '0.875rem', mb: 3 }}>
         Upload earnings history and compare claiming strategies.
       </Typography>
-      <PersonSSPanel person={primary} comp={comparison} isSpouse={false} ref={fileRef} />
-      {spouse && <PersonSSPanel person={spouse} comp={spouseComparison} isSpouse ref={spouseFileRef} />}
+      <PersonSSPanel person={primary} comp={comparison} isSpouse={false} fileInputRef={fileRef} />
+      {spouse && <PersonSSPanel person={spouse} comp={spouseComparison} isSpouse fileInputRef={spouseFileRef} />}
     </Box>
   )
 }

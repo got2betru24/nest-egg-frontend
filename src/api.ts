@@ -64,11 +64,17 @@ export const scenarioApi = {
 // ---------------------------------------------------------------------------
 
 export const personApi = {
+  list: (scenarioId: number): Promise<Person[]> =>
+    api.get(`/scenarios/${scenarioId}/persons`).then(r => r.data),
+
   create: (scenarioId: number, body: PersonCreate): Promise<Person> =>
     api.post(`/scenarios/${scenarioId}/persons`, body).then(r => r.data),
 
   update: (personId: number, body: Partial<PersonCreate>): Promise<Person> =>
     api.patch(`/persons/${personId}`, body).then(r => r.data),
+
+  delete: (personId: number): Promise<{ message: string }> =>
+    api.delete(`/persons/${personId}`).then(r => r.data),
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +82,9 @@ export const personApi = {
 // ---------------------------------------------------------------------------
 
 export const assumptionsApi = {
+  get: (scenarioId: number): Promise<Assumptions> =>
+    api.get(`/scenarios/${scenarioId}/assumptions`).then(r => r.data),
+
   upsert: (scenarioId: number, body: AssumptionsCreate): Promise<Assumptions> =>
     api.put(`/scenarios/${scenarioId}/assumptions`, body).then(r => r.data),
 }
@@ -90,6 +99,9 @@ export const accountApi = {
 
   upsert: (scenarioId: number, body: AccountCreate): Promise<Account> =>
     api.put(`/scenarios/${scenarioId}/accounts`, body).then(r => r.data),
+
+  upsertBulk: (scenarioId: number, body: AccountCreate[]): Promise<Account[]> =>
+    api.put(`/scenarios/${scenarioId}/accounts/bulk`, body).then(r => r.data),
 }
 
 // ---------------------------------------------------------------------------

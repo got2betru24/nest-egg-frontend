@@ -83,7 +83,7 @@ export function AppShell({ children }: AppShellProps) {
           {/* Egg icon */}
           <Box
             sx={{
-              width: 28,
+              width: 23,
               height: 28,
               borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
               background: 'linear-gradient(135deg, var(--color-accent) 0%, #1a9e7f 100%)',

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<defs>
+<filter id="noiseFilter">
+<feTurbulence type="fractalNoise" baseFrequency="1.5" numOctaves="3" stitchTiles="stitch"/>
+<feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -0.15 0"/>
+<feComposite operator="in" in2="SourceGraphic"/>
+</filter>
+</defs>
+<path d="M50 5 C30 5, 10 30, 10 55 C10 80, 30 95, 50 95 C70 95, 90 80, 90 55 C90 30, 70 5, 50 5 Z" fill="#FFFFFF"/>
+<path d="M50 5 C30 5, 10 30, 10 55 C10 80, 30 95, 50 95 C70 95, 90 80, 90 55 C90 30, 70 5, 50 5 Z" fill="none" stroke="#008080" stroke-width="4"/>
+<path d="M50 5 C30 5, 10 30, 10 55 C10 80, 30 95, 50 95 C70 95, 90 80, 90 55 C90 30, 70 5, 50 5 Z" fill="#FFFFFF" filter="url(#noiseFilter)" opacity="0.3"/>
+<text x="50" y="65" font-family="'Times New Roman', Times, serif" font-size="60" text-anchor="middle" fill="#BFA25A" font-weight="bold">$</text>
+</svg>

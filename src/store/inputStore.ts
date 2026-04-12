@@ -61,6 +61,7 @@ interface InputState {
   markClean: () => void
   markDirty: () => void
   reset: () => void
+  resetInputs: () => void
 }
 
 const defaultState = {
@@ -147,6 +148,24 @@ export const useInputStore = create<InputState>()(
       markDirty: () => set({ isDirty: true }),
 
       reset: () => set(defaultState),
+
+      // Clears all scenario-specific data but preserves scenarioId/name.
+      // Called by useScenarioLoader before hydrating so stale data from a
+      // previous scenario never bleeds through into the newly loaded one.
+      resetInputs: () =>
+        set((state) => ({
+          primary: null,
+          spouse: null,
+          assumptions: null,
+          accounts: {},
+          contributions: {},
+          ssClaiming: {},
+          rothOverrides: [],
+          ssEarningsUploaded: {},
+          isDirty: false,
+          scenarioId: state.scenarioId,
+          scenarioName: state.scenarioName,
+        })),
     }),
     {
       name: 'nestegg-inputs',
