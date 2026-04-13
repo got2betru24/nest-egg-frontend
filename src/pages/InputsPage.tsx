@@ -287,9 +287,13 @@ export function InputsPage() {
   const trad401kAccount  = accounts['traditional_401k']
   const roth401kAccount  = accounts['roth_401k']
   const rothIraAccount   = accounts['roth_ira']
-  const trad401kContrib  = trad401kAccount ? contributions[trad401kAccount.id] : null
-  const roth401kContrib  = roth401kAccount ? contributions[roth401kAccount.id] : null
-  const rothIraContrib   = rothIraAccount  ? contributions[rothIraAccount.id]  : null
+  const hysaAccount      = accounts['hysa']
+  const brokerageAccount = accounts['brokerage']
+  const trad401kContrib  = trad401kAccount  ? contributions[trad401kAccount.id]  : null
+  const roth401kContrib  = roth401kAccount  ? contributions[roth401kAccount.id]  : null
+  const rothIraContrib   = rothIraAccount   ? contributions[rothIraAccount.id]   : null
+  const hysaContrib      = hysaAccount      ? contributions[hysaAccount.id]      : null
+  const brokerageContrib = brokerageAccount ? contributions[brokerageAccount.id] : null
 
   if (!scenarioId) {
     return (
@@ -641,6 +645,22 @@ export function InputsPage() {
               value={rothIraContrib?.annual_amount ?? 0}
               onChange={(v) => updateContrib(rothIraAccount, 'annual_amount', v)}
               info="Combined backdoor Roth IRA contributions for both spouses. Limit is 2× the individual IRS limit."
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <CurrencyInput
+              label="High-Yield Savings (HYSA)"
+              value={hysaContrib?.annual_amount ?? 0}
+              onChange={(v) => updateContrib(hysaAccount, 'annual_amount', v)}
+              info="Annual cash savings added to your HYSA. Used as the first bridge drawdown source in early retirement."
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <CurrencyInput
+              label="Brokerage"
+              value={brokerageContrib?.annual_amount ?? 0}
+              onChange={(v) => updateContrib(brokerageAccount, 'annual_amount', v)}
+              info="Annual contributions to your taxable brokerage account. Gains taxed at LTCG rates in retirement."
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
