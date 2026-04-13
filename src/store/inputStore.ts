@@ -47,7 +47,7 @@ interface InputState {
   isDirty: boolean
 
   // Actions
-  setScenario: (id: number, name: string) => void
+  setScenario: (id: number | null, name: string) => void
   setPrimary: (person: Person) => void
   setSpouse: (person: Person | null) => void
   setAssumptions: (assumptions: Assumptions) => void
