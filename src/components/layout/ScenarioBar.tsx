@@ -41,15 +41,16 @@ export function ScenarioBar() {
 
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [dialogMode, setDialogMode] = useState<'new' | 'load'>('load')
+  const [dialogMode, setDialogMode] = useState<'new' | 'load' | 'duplicate'>('load')
   const [newName, setNewName] = useState('')
   const [scenarios, setScenarios] = useState<Scenario[]>([])
   const [loadingScenarios, setLoadingScenarios] = useState(false)
   const [creating, setCreating] = useState(false)
 
-  const openDialog = async (mode: 'new' | 'load') => {
+  const openDialog = async (mode: 'new' | 'load' | 'duplicate') => {
     setMenuAnchor(null)
     setDialogMode(mode)
+    setNewName(mode === 'duplicate' ? `${scenarioName} (copy)` : '')
     setDialogOpen(true)
     if (mode === 'load') {
       setLoadingScenarios(true)
@@ -83,11 +84,19 @@ export function ScenarioBar() {
   }
 
   const handleDuplicate = async () => {
-    if (!scenarioId) return
-    setMenuAnchor(null)
-    const duped = await scenarioApi.duplicate(scenarioId)
-    setScenario(duped.id, duped.name)
-    clearResults()
+    if (!scenarioId || !newName.trim()) return
+    setCreating(true)
+    try {
+      const duped = await scenarioApi.duplicate(scenarioId)
+      // Rename the duplicate to the user's chosen name
+      const renamed = await scenarioApi.update(duped.id, { name: newName.trim() })
+      setScenario(renamed.id, renamed.name)
+      clearResults()
+      setNewName('')
+      setDialogOpen(false)
+    } finally {
+      setCreating(false)
+    }
   }
 
   const handleRunProjection = async () => {
@@ -180,7 +189,7 @@ export function ScenarioBar() {
               Load scenario
             </MenuItem>
             <MenuItem
-              onClick={handleDuplicate}
+              onClick={() => openDialog('duplicate')}
               disabled={!scenarioId}
               sx={{ fontSize: '0.8125rem', gap: 1.5 }}
             >
@@ -243,20 +252,35 @@ export function ScenarioBar() {
         PaperProps={{ sx: { bgcolor: 'var(--bg-elevated)', border: '1px solid var(--border-default)' } }}
       >
         <DialogTitle sx={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', pb: 1 }}>
-          {dialogMode === 'new' ? 'New Scenario' : 'Load Scenario'}
+          {dialogMode === 'new' ? 'New Scenario'
+            : dialogMode === 'duplicate' ? 'Duplicate Scenario'
+            : 'Load Scenario'}
         </DialogTitle>
 
         <DialogContent>
-          {dialogMode === 'new' ? (
-            <TextField
-              fullWidth
-              label="Scenario name"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateScenario()}
-              autoFocus
-              sx={{ mt: 1 }}
-            />
+          {dialogMode === 'new' || dialogMode === 'duplicate' ? (
+            <Box>
+              {dialogMode === 'duplicate' && (
+                <Typography sx={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', mb: 1.5 }}>
+                  All inputs, accounts, contributions, and SS earnings will be copied.
+                  Projection results are not copied.
+                </Typography>
+              )}
+              <TextField
+                fullWidth
+                label="Scenario name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (dialogMode === 'new') handleCreateScenario()
+                    else handleDuplicate()
+                  }
+                }}
+                autoFocus
+                sx={{ mt: dialogMode === 'duplicate' ? 0 : 1 }}
+              />
+            </Box>
           ) : (
             <>
               {loadingScenarios ? (
@@ -302,6 +326,16 @@ export function ScenarioBar() {
               disabled={!newName.trim() || creating}
             >
               {creating ? 'Creating…' : 'Create'}
+            </Button>
+          )}
+          {dialogMode === 'duplicate' && (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={handleDuplicate}
+              disabled={!newName.trim() || creating}
+            >
+              {creating ? 'Duplicating…' : 'Duplicate'}
             </Button>
           )}
         </DialogActions>

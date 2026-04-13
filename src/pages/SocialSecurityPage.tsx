@@ -3,12 +3,11 @@
 // SS earnings upload, benefit estimates, and claiming comparison.
 // =============================================================================
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
-  Box, Typography, Button, Alert, Grid, Chip,
-  Table, TableBody, TableCell, TableHead, TableRow,
+  Box, Typography, Button, Alert, Grid, Chip, CircularProgress,
 } from '@mui/material'
-import { Upload as UploadIcon } from '@mui/icons-material'
+import { Upload as UploadIcon, Refresh as RefreshIcon } from '@mui/icons-material'
 import { ssApi } from '../api'
 import { useInputStore } from '../store/inputStore'
 import { formatCurrency } from '../utils/formatters'
@@ -19,8 +18,39 @@ export function SocialSecurityPage() {
   const [comparison, setComparison] = useState<SSClaimingComparison | null>(null)
   const [spouseComparison, setSpouseComparison] = useState<SSClaimingComparison | null>(null)
   const [uploadStatus, setUploadStatus] = useState<Record<number, 'idle' | 'uploading' | 'done' | 'error'>>({})
+  const [fetchingComparison, setFetchingComparison] = useState<Record<number, boolean>>({})
   const fileRef = useRef<HTMLInputElement>(null)
   const spouseFileRef = useRef<HTMLInputElement>(null)
+
+  // -------------------------------------------------------------------------
+  // On mount (or when person IDs change): if earnings were previously uploaded,
+  // fetch the comparison automatically so the benefit cards show without
+  // requiring a re-upload. This is the key fix — comparison state was being
+  // lost on navigation because it only lived in useState.
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    async function fetchIfUploaded(
+      personId: number,
+      isSpouse: boolean,
+    ) {
+      if (!ssEarningsUploaded[personId]) return
+      setFetchingComparison(s => ({ ...s, [personId]: true }))
+      try {
+        const comp = await ssApi.getComparison(personId)
+        if (isSpouse) setSpouseComparison(comp)
+        else setComparison(comp)
+      } catch {
+        // Earnings may have been flagged uploaded but actual rows are missing
+        // (e.g. fresh DB). Clear the flag so the user sees the upload prompt.
+        setSSEarningsUploaded(personId, false)
+      } finally {
+        setFetchingComparison(s => ({ ...s, [personId]: false }))
+      }
+    }
+
+    if (primary) fetchIfUploaded(primary.id, false)
+    if (spouse)  fetchIfUploaded(spouse.id,  true)
+  }, [primary?.id, spouse?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!scenarioId) return <Alert severity="info">No scenario loaded.</Alert>
 
@@ -35,6 +65,17 @@ export function SocialSecurityPage() {
       else setComparison(comp)
     } catch {
       setUploadStatus(s => ({ ...s, [personId]: 'error' }))
+    }
+  }
+
+  const handleRefreshComparison = async (personId: number, isSpouse: boolean) => {
+    setFetchingComparison(s => ({ ...s, [personId]: true }))
+    try {
+      const comp = await ssApi.getComparison(personId)
+      if (isSpouse) setSpouseComparison(comp)
+      else setComparison(comp)
+    } finally {
+      setFetchingComparison(s => ({ ...s, [personId]: false }))
     }
   }
 
@@ -53,7 +94,13 @@ export function SocialSecurityPage() {
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
         <Typography sx={{ fontWeight: 500, fontSize: '0.875rem' }}>{label}</Typography>
-        {recommended && <Chip label="Recommended" size="small" sx={{ bgcolor: 'var(--color-accent)', color: '#0f1117', fontSize: '0.6875rem' }} />}
+        {recommended && (
+          <Chip
+            label="Recommended"
+            size="small"
+            sx={{ bgcolor: 'var(--color-accent)', color: '#0f1117', fontSize: '0.6875rem' }}
+          />
+        )}
       </Box>
       <Typography className="num" sx={{ fontSize: '1.5rem', color: recommended ? 'var(--color-accent)' : 'var(--text-primary)', mb: 0.5 }}>
         {formatCurrency(benefit.monthly_benefit)}/mo
@@ -81,6 +128,7 @@ export function SocialSecurityPage() {
     if (!person) return null
     const status = uploadStatus[person.id] ?? 'idle'
     const uploaded = ssEarningsUploaded[person.id]
+    const fetching = fetchingComparison[person.id] ?? false
 
     return (
       <Box sx={{ mb: 4 }}>
@@ -106,11 +154,46 @@ export function SocialSecurityPage() {
             onClick={() => fileInputRef.current?.click()}
             disabled={status === 'uploading'}
           >
-            {status === 'uploading' ? 'Uploading…' : uploaded ? 'Re-upload Earnings CSV' : 'Upload Earnings CSV'}
+            {status === 'uploading'
+              ? 'Uploading…'
+              : uploaded
+              ? 'Re-upload Earnings CSV'
+              : 'Upload Earnings CSV'}
           </Button>
-          {status === 'done' && <Chip label="Uploaded ✓" size="small" sx={{ bgcolor: 'rgba(45,212,170,0.12)', color: 'var(--color-positive)' }} />}
-          {status === 'error' && <Chip label="Upload failed" size="small" sx={{ bgcolor: 'rgba(248,113,113,0.12)', color: 'var(--color-negative)' }} />}
+
+          {uploaded && (
+            <Button
+              variant="text"
+              size="small"
+              startIcon={
+                fetching
+                  ? <CircularProgress size={12} sx={{ color: 'inherit' }} />
+                  : <RefreshIcon fontSize="small" />
+              }
+              onClick={() => handleRefreshComparison(person.id, isSpouse)}
+              disabled={fetching}
+              sx={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}
+            >
+              Recalculate
+            </Button>
+          )}
+
+          {status === 'done' && (
+            <Chip label="Uploaded ✓" size="small" sx={{ bgcolor: 'rgba(45,212,170,0.12)', color: 'var(--color-positive)' }} />
+          )}
+          {status === 'error' && (
+            <Chip label="Upload failed" size="small" sx={{ bgcolor: 'rgba(248,113,113,0.12)', color: 'var(--color-negative)' }} />
+          )}
         </Box>
+
+        {fetching && !comp && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 2 }}>
+            <CircularProgress size={16} sx={{ color: 'var(--color-accent)' }} />
+            <Typography sx={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+              Calculating benefit estimates…
+            </Typography>
+          </Box>
+        )}
 
         {comp && (
           <Grid container spacing={2}>
@@ -126,15 +209,18 @@ export function SocialSecurityPage() {
           </Grid>
         )}
 
-        {!comp && uploaded && (
-          <Alert severity="info" sx={{ fontSize: '0.8125rem' }}>
-            Earnings uploaded. Run the optimizer to see benefit estimates.
+        {!comp && !fetching && uploaded && (
+          <Alert severity="warning" sx={{ fontSize: '0.8125rem' }}>
+            Earnings are uploaded but no estimates are available. Click Recalculate or ensure
+            your birth year is saved in Inputs.
           </Alert>
         )}
+
         {!uploaded && (
           <Alert severity="info" sx={{ fontSize: '0.8125rem' }}>
-            Upload your SSA earnings history CSV to see benefit estimates. Download the template from the backend
-            at <code>backend/database/ss_earnings_template.csv</code>.
+            Upload your SSA earnings history CSV to see benefit estimates. Use the template at{' '}
+            <code>backend/database/ss_earnings_template.csv</code> — fill in your annual
+            earnings from your SSA statement at mysocialsecurity.gov.
           </Alert>
         )}
       </Box>
@@ -145,7 +231,8 @@ export function SocialSecurityPage() {
     <Box className="page-enter" sx={{ maxWidth: 900 }}>
       <Typography variant="h2" sx={{ fontSize: '1.75rem', mb: 0.5 }}>Social Security</Typography>
       <Typography sx={{ color: 'var(--text-secondary)', fontSize: '0.875rem', mb: 3 }}>
-        Upload earnings history and compare claiming strategies.
+        Upload earnings history and compare claiming strategies. Benefit estimates persist
+        across sessions — re-upload only if your earnings history changes.
       </Typography>
       <PersonSSPanel person={primary} comp={comparison} isSpouse={false} fileInputRef={fileRef} />
       {spouse && <PersonSSPanel person={spouse} comp={spouseComparison} isSpouse fileInputRef={spouseFileRef} />}
