@@ -10,6 +10,7 @@ export type AppView =
   | 'dashboard'
   | 'inputs'
   | 'projection'
+  | 'contribution-planner'
   | 'optimizer'
   | 'social-security'
   | 'retirement'
@@ -37,6 +38,9 @@ interface UIState {
   // Scenario management modal
   scenarioModalOpen: boolean
 
+  // Optimizer alert banner
+  optimizerAlert: boolean
+
   // Actions
   setActiveView: (view: AppView) => void
   toggleSidebar: () => void
@@ -46,12 +50,14 @@ interface UIState {
   toggleAllScenarios: () => void
   toggleSection: (section: string) => void
   setScenarioModalOpen: (open: boolean) => void
+  setOptimizerAlert: (show: boolean) => void
 }
 
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
       activeView: 'dashboard',
+      showOptimizerAlert: false, //
       sidebarCollapsed: false,
       chartView: 'combined',
       balanceView: 'total',
@@ -66,6 +72,7 @@ export const useUIStore = create<UIState>()(
         roth: false,
       },
       scenarioModalOpen: false,
+      optimizerAlert: false,
 
       setActiveView: (view) => set({ activeView: view }),
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
@@ -83,6 +90,7 @@ export const useUIStore = create<UIState>()(
           },
         })),
       setScenarioModalOpen: (open) => set({ scenarioModalOpen: open }),
+      setOptimizerAlert: (show) => set({optimizerAlert: show}),
     }),
     {
       name: 'nestegg-ui',

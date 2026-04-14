@@ -4,7 +4,7 @@
 // dirty indicator, and run projection button.
 // =============================================================================
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -40,7 +40,7 @@ import { projectionApi, optimizerApi, scenarioApi } from "../../api";
 import type { Scenario } from "../../types";
 
 export function ScenarioBar() {
-  const { scenarioId, scenarioName, isDirty, setScenario, markClean, reset } =
+  const { scenarioId, scenarioName, isDirty, setScenario, markClean } =
     useInputStore();
   const {
     activeScenario,

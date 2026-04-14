@@ -301,6 +301,37 @@ export interface FullScenario {
 }
 
 // ---------------------------------------------------------------------------
+// Contribution Planner
+// ---------------------------------------------------------------------------
+
+export interface ContributionPlanRequest {
+  scenario_id: number
+  return_scenario?: 'conservative' | 'base' | 'optimistic'
+  include_traditional_401k: boolean
+  include_roth_401k: boolean
+  include_roth_ira: boolean
+  include_hysa: boolean
+  include_brokerage: boolean
+}
+
+export interface ContributionPlanResult {
+  solved: boolean
+  traditional_401k_annual: number
+  roth_401k_annual: number
+  roth_ira_annual: number
+  hysa_annual: number
+  brokerage_annual: number
+  employer_match_annual: number
+  total_annual_contribution: number
+  limit_traditional_401k: number
+  limit_roth_401k: number
+  limit_roth_ira: number
+  projection: ProjectionResult | null
+  iterations: number
+  notes: string[]
+}
+
+// ---------------------------------------------------------------------------
 // Tax
 // ---------------------------------------------------------------------------
 

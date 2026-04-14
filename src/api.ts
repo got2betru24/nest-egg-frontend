@@ -11,6 +11,8 @@ import type {
   AssumptionsCreate,
   Contribution,
   ContributionCreate,
+  ContributionPlanRequest,
+  ContributionPlanResult,
   FullScenario,
   OptimizedStrategy,
   Person,
@@ -240,6 +242,15 @@ export const taxApi = {
         conversion_amount: params.conversionAmount,
       })
       .then(r => r.data),
+}
+
+// ---------------------------------------------------------------------------
+// Contribution Planner
+// ---------------------------------------------------------------------------
+
+export const contributionPlannerApi = {
+  solve: (params: ContributionPlanRequest): Promise<ContributionPlanResult> =>
+    api.post('/contribution-planner/solve', params).then(r => r.data),
 }
 
 export default api

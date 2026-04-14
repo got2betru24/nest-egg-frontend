@@ -15,19 +15,21 @@ import { ProjectionPage } from './pages/ProjectionPage'
 import { OptimizerPage } from './pages/OptimizerPage'
 import { SocialSecurityPage } from './pages/SocialSecurityPage'
 import { RetirementPage } from './pages/RetirementPage'
+import { ContributionPlannerPage } from './pages/ContributionPlannerPage'
 import { TaxPage } from './pages/TaxPage'
 
 function ActiveView() {
   const { activeView } = useUIStore()
   switch (activeView) {
-    case 'dashboard':       return <Dashboard />
-    case 'inputs':          return <InputsPage />
-    case 'projection':      return <ProjectionPage />
-    case 'optimizer':       return <OptimizerPage />
-    case 'social-security': return <SocialSecurityPage />
-    case 'retirement':      return <RetirementPage />
-    case 'tax':             return <TaxPage />
-    default:                return <Dashboard />
+    case 'dashboard':             return <Dashboard />
+    case 'inputs':                return <InputsPage />
+    case 'projection':            return <ProjectionPage />
+    case 'optimizer':             return <OptimizerPage />
+    case 'contribution-planner':  return <ContributionPlannerPage />
+    case 'social-security':       return <SocialSecurityPage />
+    case 'retirement':            return <RetirementPage />
+    case 'tax':                   return <TaxPage />
+    default:                      return <Dashboard />
   }
 }
 

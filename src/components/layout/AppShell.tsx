@@ -8,6 +8,7 @@ import {
   Dashboard as DashboardIcon,
   TuneRounded as InputsIcon,
   ShowChart as ProjectionIcon,
+  EventRepeat as PlannerIcon,
   AutoFixHigh as OptimizerIcon,
   SavingsRounded as SSIcon,
   BeachAccess as RetirementIcon,
@@ -25,13 +26,14 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { view: 'dashboard',       label: 'Dashboard',       icon: <DashboardIcon fontSize="small" /> },
-  { view: 'inputs',          label: 'Inputs',          icon: <InputsIcon fontSize="small" /> },
-  { view: 'projection',      label: 'Projection',      icon: <ProjectionIcon fontSize="small" /> },
-  { view: 'optimizer',       label: 'Optimizer',       icon: <OptimizerIcon fontSize="small" /> },
-  { view: 'social-security', label: 'Social Security', icon: <SSIcon fontSize="small" /> },
-  { view: 'retirement',      label: 'Retirement',      icon: <RetirementIcon fontSize="small" /> },
-  { view: 'tax',             label: 'Tax',             icon: <TaxIcon fontSize="small" /> },
+  { view: 'dashboard',            label: 'Dashboard',            icon: <DashboardIcon fontSize="small" /> },
+  { view: 'inputs',               label: 'Inputs',               icon: <InputsIcon fontSize="small" /> },
+  { view: 'projection',           label: 'Projection',           icon: <ProjectionIcon fontSize="small" /> },
+  { view: 'contribution-planner', label: 'Contribution Planner', icon: <PlannerIcon fontSize="small" /> },
+  { view: 'optimizer',            label: 'Optimizer',            icon: <OptimizerIcon fontSize="small" /> },
+  { view: 'social-security',      label: 'Social Security',      icon: <SSIcon fontSize="small" /> },
+  { view: 'retirement',           label: 'Retirement',           icon: <RetirementIcon fontSize="small" /> },
+  { view: 'tax',                  label: 'Tax',                  icon: <TaxIcon fontSize="small" /> },
 ]
 
 interface AppShellProps {
