@@ -14,6 +14,7 @@ import {
   ArrowForward as ArrowIcon,
   WarningAmber as WarnIcon,
   CheckCircleOutline as CheckIcon,
+  AttachMoney as SpendIcon,
 } from '@mui/icons-material'
 import { useInputStore } from '../store/inputStore'
 import { useResultStore } from '../store/resultStore'
@@ -116,7 +117,6 @@ function AccountBar({ result }: AccountBarProps) {
 
   return (
     <Box>
-      {/* Bar */}
       <Box sx={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', mb: 1.5 }}>
         {segments.map((seg) => (
           <Box
@@ -129,7 +129,6 @@ function AccountBar({ result }: AccountBarProps) {
           />
         ))}
       </Box>
-      {/* Legend */}
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
         {segments.map((seg) => (
           <Box key={seg.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
@@ -142,6 +141,130 @@ function AccountBar({ result }: AccountBarProps) {
             </Typography>
           </Box>
         ))}
+      </Box>
+    </Box>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Income coverage bar — shows % of retirement years meeting income target
+// ---------------------------------------------------------------------------
+
+interface IncomeCoverageBarProps {
+  result: ProjectionResult
+}
+
+function IncomeCoverageBar({ result }: IncomeCoverageBarProps) {
+  const distYears = result.years.filter(y => y.phase !== 'accumulation')
+  if (distYears.length === 0) return null
+
+  const metYears = distYears.filter(y => y.income_gap >= -100).length // within $100 tolerance
+  const coveragePct = Math.round((metYears / distYears.length) * 100)
+
+  const avgNetIncome = distYears.reduce((s, y) => s + y.net_income, 0) / distYears.length
+  const avgTarget = distYears.reduce((s, y) => s + y.income_target, 0) / distYears.length
+
+  const shortfallYears = distYears.filter(y => y.income_gap < -100)
+  const avgShortfall = shortfallYears.length > 0
+    ? shortfallYears.reduce((s, y) => s + y.income_gap, 0) / shortfallYears.length
+    : 0
+
+  return (
+    <Box
+      sx={{
+        p: 2.5,
+        borderRadius: 'var(--radius-lg)',
+        bgcolor: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
+        mb: 3,
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <SpendIcon sx={{ fontSize: 16, color: 'var(--color-accent)' }} />
+          <Typography sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
+            Income Target Coverage
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography
+            className="num"
+            sx={{
+              fontSize: '1.25rem',
+              color: coveragePct >= 100
+                ? 'var(--color-positive)'
+                : coveragePct >= 85
+                ? 'var(--color-warning)'
+                : 'var(--color-negative)',
+            }}
+          >
+            {coveragePct}%
+          </Typography>
+          <Chip
+            label={coveragePct >= 100 ? 'Full Coverage' : coveragePct >= 85 ? 'Mostly Met' : 'Shortfall'}
+            size="small"
+            sx={{
+              bgcolor: coveragePct >= 100
+                ? 'rgba(45,212,170,0.12)'
+                : coveragePct >= 85
+                ? 'rgba(245,158,11,0.12)'
+                : 'rgba(248,113,113,0.12)',
+              color: coveragePct >= 100
+                ? 'var(--color-positive)'
+                : coveragePct >= 85
+                ? 'var(--color-warning)'
+                : 'var(--color-negative)',
+              border: 'none',
+            }}
+          />
+        </Box>
+      </Box>
+
+      <LinearProgress
+        variant="determinate"
+        value={Math.min(coveragePct, 100)}
+        sx={{
+          height: 6,
+          borderRadius: 3,
+          bgcolor: 'rgba(255,255,255,0.06)',
+          mb: 1.5,
+          '& .MuiLinearProgress-bar': {
+            bgcolor: coveragePct >= 100
+              ? 'var(--color-positive)'
+              : coveragePct >= 85
+              ? 'var(--color-warning)'
+              : 'var(--color-negative)',
+          },
+        }}
+      />
+
+      <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        <Box>
+          <Typography sx={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Avg Net Spend/yr
+          </Typography>
+          <Typography className="num" sx={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+            {formatCurrency(avgNetIncome, { compact: true })}
+          </Typography>
+        </Box>
+        <Box>
+          <Typography sx={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Avg Target/yr
+          </Typography>
+          <Typography className="num" sx={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+            {formatCurrency(avgTarget, { compact: true })}
+          </Typography>
+        </Box>
+        {shortfallYears.length > 0 && (
+          <Box>
+            <Typography sx={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Shortfall Years
+            </Typography>
+            <Typography className="num" sx={{ fontSize: '1rem', color: 'var(--color-negative)' }}>
+              {shortfallYears.length} yrs (avg {formatCurrency(avgShortfall, { compact: true })})
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   )
@@ -206,7 +329,6 @@ export function Dashboard() {
 
   const projection = getActiveProjection()
 
-  // Key metrics derived from projection
   const retirementYear = primary
     ? new Date().getFullYear() + (primary.planned_retirement_age - (new Date().getFullYear() - primary.birth_year))
     : null
@@ -225,7 +347,6 @@ export function Dashboard() {
   const retirementAge = primary?.planned_retirement_age ?? 55
   const retirementDuration = planToAge - retirementAge
 
-  // Readiness score (simplified: does portfolio survive?)
   const survives = projection?.success ?? null
   const depletionAge = projection?.depletion_age ?? null
 
@@ -233,6 +354,16 @@ export function Dashboard() {
     ? 100
     : depletionAge
     ? Math.round(((depletionAge - retirementAge) / retirementDuration) * 100)
+    : null
+
+  // Compute effective tax rate on spending (total tax / total gross withdrawals)
+  const distYears = projection?.years.filter(y => y.phase !== 'accumulation') ?? []
+  const totalGrossWithdrawals = distYears.reduce((s, y) =>
+    s + y.withdrawals.hysa + y.withdrawals.brokerage + y.withdrawals.roth_ira
+      + y.withdrawals.traditional_401k + y.withdrawals.roth_401k, 0)
+  const totalTax = distYears.reduce((s, y) => s + (y.tax?.total_tax ?? 0), 0)
+  const effectiveTaxOnSpending = totalGrossWithdrawals > 0
+    ? totalTax / totalGrossWithdrawals
     : null
 
   return (
@@ -310,9 +441,6 @@ export function Dashboard() {
         </Alert>
       )}
 
-      {/* ----------------------------------------------------------------
-          Key metrics
-          ---------------------------------------------------------------- */}
       {scenarioId && (
         <Box className="stagger">
 
@@ -344,14 +472,17 @@ export function Dashboard() {
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
               <StatCard
-                label="Total Tax Paid"
-                value={projection ? formatCurrency(projection.total_tax_paid, { compact: true }) : '—'}
-                sub="Lifetime estimate"
+                label="Tax Rate on Spending"
+                value={effectiveTaxOnSpending !== null ? formatPercent(effectiveTaxOnSpending) : '—'}
+                sub="Lifetime effective rate"
               />
             </Grid>
           </Grid>
 
-          {/* Portfolio readiness */}
+          {/* Income coverage — new primary readiness indicator */}
+          {projection && <IncomeCoverageBar result={projection} />}
+
+          {/* Portfolio readiness (portfolio survival) */}
           {readinessPct !== null && (
             <Box
               sx={{
@@ -364,7 +495,7 @@ export function Dashboard() {
             >
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
                 <Typography sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
-                  Retirement Readiness
+                  Portfolio Longevity
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography
@@ -504,15 +635,15 @@ export function Dashboard() {
               <QuickCard
                 icon={<TrendingUpIcon fontSize="small" />}
                 title="Projection"
-                description="Year-by-year account growth and income charts"
+                description="Year-by-year account growth and income coverage"
                 view="projection"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <QuickCard
                 icon={<OptimizeIcon fontSize="small" />}
-                title="Optimizer"
-                description="Best withdrawal order, Roth ladder, and SS timing"
+                title="Withdrawal Planner"
+                description="Optimal withdrawal order, Roth ladder, and SS timing"
                 view="optimizer"
                 accent
               />
