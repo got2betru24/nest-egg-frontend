@@ -169,6 +169,7 @@ export interface SSClaimingComparison {
   early: SSBenefitEstimate
   fra: SSBenefitEstimate
   late: SSBenefitEstimate
+  benefit_basis: string
 }
 
 // ---------------------------------------------------------------------------
