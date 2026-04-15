@@ -11,15 +11,7 @@ import { useInputStore } from "../store/inputStore";
 import { useResultStore } from "../store/resultStore";
 import type { ProjectionYear } from "../types";
 import { formatCurrency, formatPercent } from "../utils/formatters";
-
-const COLORS = {
-  ordinary: "#94a3b8",
-  ltcg: "#a78bfa",
-  niit: "#f87171",
-  effective: "#2dd4aa",
-  marginal: "#f59e0b",
-  target: "rgba(240,237,232,0.3)",
-};
+import { ACCOUNT_COLORS as COLORS } from "../constants/colors";
 
 const PLOTLY_LAYOUT_BASE: Partial<Plotly.Layout> = {
   paper_bgcolor: "transparent",

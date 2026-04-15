@@ -6,21 +6,23 @@
 // =============================================================================
 
 import {
-    ArrowForward as ApplyIcon, AutoMode as SolveIcon, CheckCircleOutline as CheckIcon,
-    ErrorOutline as ErrorIcon,
-    InfoOutlined as InfoIcon
+  ArrowForward as ApplyIcon,
+  CheckCircleOutline as CheckIcon,
+  ErrorOutline as ErrorIcon,
+  InfoOutlined as InfoIcon,
+  AutoMode as SolveIcon,
 } from "@mui/icons-material";
 import {
-    Alert,
-    Box,
-    Button,
-    Chip,
-    Divider,
-    Grid2,
-    LinearProgress,
-    Switch,
-    Tooltip,
-    Typography
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Divider,
+  Grid2,
+  LinearProgress,
+  Switch,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { useState } from "react";
 import { contributionApi, contributionPlannerApi } from "../api";
@@ -28,6 +30,7 @@ import { useInputStore } from "../store/inputStore";
 import { useUIStore } from "../store/uiStore";
 import type { AccountType, ContributionPlanResult } from "../types";
 import { formatCurrency } from "../utils/formatters";
+import { ACCOUNT_COLORS as COLORS } from "../constants/colors";
 
 // ---------------------------------------------------------------------------
 // Account config
@@ -48,7 +51,7 @@ const ACCOUNT_CONFIGS: AccountConfig[] = [
   {
     type: "traditional_401k",
     label: "Traditional 401(k)",
-    color: "var(--color-trad-401k)",
+    color: COLORS.traditional_401k,
     hasIrsLimit: true,
     limitKey: "limit_traditional_401k",
     includeKey: "traditional_401k",
@@ -58,7 +61,7 @@ const ACCOUNT_CONFIGS: AccountConfig[] = [
   {
     type: "roth_401k",
     label: "Roth 401(k)",
-    color: "var(--color-roth-401k)",
+    color: COLORS.roth_401k,
     hasIrsLimit: true,
     limitKey: "limit_roth_401k",
     includeKey: "roth_401k",
@@ -68,7 +71,7 @@ const ACCOUNT_CONFIGS: AccountConfig[] = [
   {
     type: "roth_ira",
     label: "Roth IRA (Combined Couple)",
-    color: "var(--color-roth-ira)",
+    color: COLORS.roth_ira,
     hasIrsLimit: true,
     limitKey: "limit_roth_ira",
     includeKey: "roth_ira",
@@ -78,7 +81,7 @@ const ACCOUNT_CONFIGS: AccountConfig[] = [
   {
     type: "hysa",
     label: "High-Yield Savings (HYSA)",
-    color: "var(--color-hysa)",
+    color: COLORS.hysa,
     hasIrsLimit: false,
     includeKey: "hysa",
     resultKey: "hysa_annual",
@@ -87,7 +90,7 @@ const ACCOUNT_CONFIGS: AccountConfig[] = [
   {
     type: "brokerage",
     label: "Brokerage",
-    color: "var(--color-brokerage)",
+    color: COLORS.brokerage,
     hasIrsLimit: false,
     includeKey: "brokerage",
     resultKey: "brokerage_annual",
@@ -375,14 +378,8 @@ function SummaryCard({ result }: { result: ContributionPlanResult }) {
 // ---------------------------------------------------------------------------
 
 export function ContributionPlannerPage() {
-  const {
-    scenarioId,
-    accounts,
-    contributions,
-    assumptions,
-    setContribution,
-    markDirty,
-  } = useInputStore();
+  const { scenarioId, accounts, contributions, setContribution, markDirty } =
+    useInputStore();
 
   const { setActiveView, setOptimizerAlert } = useUIStore();
 

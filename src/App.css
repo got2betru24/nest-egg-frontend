@@ -9,58 +9,51 @@
    --------------------------------------------------------------------------- */
 :root {
   /* Background layers */
-  --bg-base:        #0f1117;
-  --bg-surface:     #161b27;
-  --bg-elevated:    #1e2538;
-  --bg-overlay:     #252d42;
+  --bg-base: #0f1117;
+  --bg-surface: #161b27;
+  --bg-elevated: #1e2538;
+  --bg-overlay: #252d42;
 
   /* Text */
-  --text-primary:   #f0ede8;
+  --text-primary: #f0ede8;
   --text-secondary: #9aa0b4;
-  --text-muted:     #5c6480;
-  --text-inverse:   #0f1117;
+  --text-muted: #5c6480;
+  --text-inverse: #0f1117;
 
   /* Accent — teal/emerald */
-  --color-accent:   #2dd4aa;
+  --color-accent: #2dd4aa;
   --color-accent-dim: rgba(45, 212, 170, 0.12);
   --color-accent-hover: #34e8bc;
 
   /* Semantic */
   --color-positive: #2dd4aa;
   --color-negative: #f87171;
-  --color-warning:  #f59e0b;
-  --color-info:     #60a5fa;
-
-  /* Account colors (consistent across charts) */
-  --color-hysa:         #60a5fa;
-  --color-brokerage:    #a78bfa;
-  --color-roth-ira:     #2dd4aa;
-  --color-trad-401k:    #f59e0b;
-  --color-roth-401k:    #34d399;
+  --color-warning: #f59e0b;
+  --color-info: #60a5fa;
 
   /* Borders */
-  --border-subtle:  rgba(255, 255, 255, 0.06);
-  --border-default: rgba(255, 255, 255, 0.10);
-  --border-strong:  rgba(255, 255, 255, 0.18);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
 
   /* Shadows */
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md:  0 4px 16px rgba(0,0,0,0.5);
-  --shadow-lg:  0 8px 32px rgba(0,0,0,0.6);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
 
   /* Typography */
-  --font-display: 'DM Serif Display', Georgia, serif;
-  --font-body:    'DM Sans', system-ui, sans-serif;
-  --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
+  --font-display: "DM Serif Display", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
 
   /* Spacing scale */
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  20px;
-  --space-6:  24px;
-  --space-8:  32px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
 
@@ -85,7 +78,9 @@
 /* ---------------------------------------------------------------------------
    Reset & base
    --------------------------------------------------------------------------- */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -115,18 +110,28 @@ body {
 /* ---------------------------------------------------------------------------
    Typography
    --------------------------------------------------------------------------- */
-.font-display { font-family: var(--font-display); }
-.font-mono    { font-family: var(--font-mono); }
-.font-body    { font-family: var(--font-body); }
+.font-display {
+  font-family: var(--font-display);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+.font-body {
+  font-family: var(--font-body);
+}
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-display);
   font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
-h4, h5, h6 {
+h4,
+h5,
+h6 {
   font-family: var(--font-body);
   font-weight: 600;
 }
@@ -159,12 +164,24 @@ h4, h5, h6 {
 /* ---------------------------------------------------------------------------
    Utility classes
    --------------------------------------------------------------------------- */
-.text-accent    { color: var(--color-accent); }
-.text-positive  { color: var(--color-positive); }
-.text-negative  { color: var(--color-negative); }
-.text-warning   { color: var(--color-warning); }
-.text-muted     { color: var(--text-muted); }
-.text-secondary { color: var(--text-secondary); }
+.text-accent {
+  color: var(--color-accent);
+}
+.text-positive {
+  color: var(--color-positive);
+}
+.text-negative {
+  color: var(--color-negative);
+}
+.text-warning {
+  color: var(--color-warning);
+}
+.text-muted {
+  color: var(--text-muted);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
 
 .surface {
   background: var(--bg-surface);
@@ -182,8 +199,14 @@ h4, h5, h6 {
    Number counter animation
    --------------------------------------------------------------------------- */
 @keyframes countUp {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .num-animate {
@@ -194,8 +217,14 @@ h4, h5, h6 {
    Page entry animation
    --------------------------------------------------------------------------- */
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .page-enter {
@@ -207,12 +236,24 @@ h4, h5, h6 {
   opacity: 0;
   animation: fadeSlideIn 250ms ease forwards;
 }
-.stagger > *:nth-child(1)  { animation-delay: 0ms; }
-.stagger > *:nth-child(2)  { animation-delay: 50ms; }
-.stagger > *:nth-child(3)  { animation-delay: 100ms; }
-.stagger > *:nth-child(4)  { animation-delay: 150ms; }
-.stagger > *:nth-child(5)  { animation-delay: 200ms; }
-.stagger > *:nth-child(6)  { animation-delay: 250ms; }
+.stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 50ms;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 100ms;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 150ms;
+}
+.stagger > *:nth-child(5) {
+  animation-delay: 200ms;
+}
+.stagger > *:nth-child(6) {
+  animation-delay: 250ms;
+}
 
 /* ---------------------------------------------------------------------------
    MUI overrides — dark theme integration

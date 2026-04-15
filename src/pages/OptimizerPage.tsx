@@ -5,11 +5,18 @@
 // =============================================================================
 
 import {
-    AutoFixHigh as OptimizeIcon,
-    InfoOutlined as InfoIcon
+  AutoFixHigh as OptimizeIcon,
+  InfoOutlined as InfoIcon,
 } from "@mui/icons-material";
 import {
-    Alert, Box, Button, Chip, CircularProgress, Grid2, Tooltip, Typography
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Grid2,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { useState } from "react";
 import Plot from "react-plotly.js";
@@ -18,6 +25,7 @@ import { useInputStore } from "../store/inputStore";
 import { useResultStore } from "../store/resultStore";
 import type { ProjectionYear } from "../types";
 import { formatCurrency, formatPercent } from "../utils/formatters";
+import { ACCOUNT_COLORS as COLORS } from "../constants/colors";
 
 const LAYOUT = {
   paper_bgcolor: "transparent",
@@ -31,13 +39,13 @@ const LAYOUT = {
     y: -0.18,
   },
   xaxis: {
-    Grid2color: "rgba(255,255,255,0.04)",
+    gridcolor: "rgba(255,255,255,0.04)",
     linecolor: "rgba(255,255,255,0.08)",
     tickfont: { size: 10 },
     zeroline: false,
   },
   yaxis: {
-    Grid2color: "rgba(255,255,255,0.04)",
+    gridcolor: "rgba(255,255,255,0.04)",
     linecolor: "rgba(255,255,255,0.08)",
     tickfont: { size: 10 },
     zeroline: false,
@@ -48,17 +56,6 @@ const LAYOUT = {
     bordercolor: "rgba(255,255,255,0.10)",
     font: { family: "IBM Plex Mono, monospace", size: 11, color: "#f0ede8" },
   },
-};
-
-const COLORS = {
-  hysa: "#60a5fa",
-  brokerage: "#a78bfa",
-  roth_ira: "#2dd4aa",
-  trad_401k: "#f59e0b",
-  roth_401k: "#34d399",
-  ss: "#fb923c",
-  target: "rgba(240,237,232,0.3)",
-  net_income: "#2dd4aa",
 };
 
 // ---------------------------------------------------------------------------
@@ -229,7 +226,7 @@ function WithdrawalMixChart({ years }: { years: ProjectionYear[] }) {
           y: distYears.map((y) => y.withdrawals.traditional_401k / 1000),
           name: "Trad 401k (ordinary)",
           type: "bar",
-          marker: { color: COLORS.trad_401k + "cc" },
+          marker: { color: COLORS.traditional_401k + "cc" },
           hovertemplate: "<b>Trad 401k</b>: $%{y:.0f}K<extra></extra>",
         },
         {
@@ -360,7 +357,7 @@ function RothLadderChart({
           side: "right",
           tickprefix: "$",
           ticksuffix: "K",
-          Grid2color: "transparent",
+          gridcolor: "transparent",
           tickfont: { size: 10, color: "#5c6480" },
         },
         height: 260,
@@ -381,7 +378,7 @@ function WithdrawalOrderPanel() {
       step: "1",
       label: "Brokerage",
       sub: "When ordinary income stays in 0% LTCG zone",
-      color: "var(--color-brokerage)",
+      color: COLORS.brokerage,
       detail:
         "Gains are tax-free when total income is below ~$96.7K (MFJ). Pulled first to capture this window before ordinary income fills the bracket.",
     },
@@ -389,7 +386,7 @@ function WithdrawalOrderPanel() {
       step: "2",
       label: "Traditional 401(k)",
       sub: "Up to target bracket ceiling",
-      color: "var(--color-trad-401k)",
+      color: COLORS.traditional_401k,
       detail:
         'Ordinary income up to the Roth ladder ceiling (e.g. 22%). Only the "cheap" portion — bracket spill only as last resort.',
     },
@@ -397,7 +394,7 @@ function WithdrawalOrderPanel() {
       step: "3",
       label: "HYSA",
       sub: "Tax-free cash — no bracket cost",
-      color: "var(--color-hysa)",
+      color: COLORS.hysa,
       detail:
         "Already-taxed cash. No tax on withdrawal. Used to fill remaining need before touching Roth.",
     },
@@ -405,7 +402,7 @@ function WithdrawalOrderPanel() {
       step: "4",
       label: "Roth IRA / 401(k)",
       sub: "Last resort — preserve tax-free growth",
-      color: "var(--color-roth-ira)",
+      color: COLORS.roth_ira,
       detail:
         "Genuinely the last source. Roth grows tax-free indefinitely — every dollar not withdrawn today compounds without future tax.",
     },
@@ -413,7 +410,7 @@ function WithdrawalOrderPanel() {
       step: "5",
       label: "Roth Conversion",
       sub: "After need is met — leftover bracket room",
-      color: "#c4b5fd",
+      color: COLORS.roth_conversion,
       detail:
         "Conversions run after all withdrawals are resolved, using only the bracket room that wasn't consumed by income needs. Conversions never displace spending.",
     },

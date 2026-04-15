@@ -5,16 +5,38 @@
 // =============================================================================
 
 import {
-    ExpandLess as CollapseIcon, ExpandMore as ExpandIcon, InfoOutlined as InfoIcon, Save as SaveIcon
+  ExpandLess as CollapseIcon,
+  ExpandMore as ExpandIcon,
+  InfoOutlined as InfoIcon,
+  Save as SaveIcon,
 } from "@mui/icons-material";
 import {
-    Alert, Box, Button, Collapse, Divider, FormControl, FormControlLabel, Grid2, IconButton, InputAdornment, InputLabel, MenuItem, Select, Slider, Snackbar, Switch, TextField, Tooltip, Typography
+  Alert,
+  Box,
+  Button,
+  Collapse,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  Grid2,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Select,
+  Slider,
+  Snackbar,
+  Switch,
+  TextField,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { useState } from "react";
 import { accountApi, assumptionsApi, contributionApi, personApi } from "../api";
 import { useInputStore } from "../store/inputStore";
 import { useUIStore } from "../store/uiStore";
 import type { AccountType, AssumptionsCreate } from "../types";
+import { ACCOUNT_COLORS as HEX_COLORS } from "../constants/colors";
 
 // ---------------------------------------------------------------------------
 // Section wrapper
@@ -192,11 +214,11 @@ const ACCOUNT_LABELS: Record<AccountType, string> = {
 };
 
 const ACCOUNT_COLORS: Record<AccountType, string> = {
-  hysa: "var(--color-hysa)",
-  brokerage: "var(--color-brokerage)",
-  roth_ira: "var(--color-roth-ira)",
-  traditional_401k: "var(--color-trad-401k)",
-  roth_401k: "var(--color-roth-401k)",
+  hysa: HEX_COLORS.hysa,
+  brokerage: HEX_COLORS.brokerage,
+  roth_ira: HEX_COLORS.roth_ira,
+  traditional_401k: HEX_COLORS.traditional_401k,
+  roth_401k: HEX_COLORS.roth_401k,
 };
 
 const ACCOUNT_TYPES: AccountType[] = [

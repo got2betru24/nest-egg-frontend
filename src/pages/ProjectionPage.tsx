@@ -4,11 +4,16 @@
 // withdrawal source mix, tax breakdown. Scenario toggle + year detail drill-down.
 // =============================================================================
 
+import { InfoOutlined as InfoIcon } from "@mui/icons-material";
 import {
-    InfoOutlined as InfoIcon
-} from "@mui/icons-material";
-import {
-    Alert, Box, Chip, CircularProgress, Grid2, ToggleButton, ToggleButtonGroup, Typography
+  Alert,
+  Box,
+  Chip,
+  CircularProgress,
+  Grid2,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
 } from "@mui/material";
 import { useState } from "react";
 import Plot from "react-plotly.js";
@@ -16,26 +21,7 @@ import { useInputStore } from "../store/inputStore";
 import { useResultStore } from "../store/resultStore";
 import type { ProjectionYear, ReturnScenario } from "../types";
 import { formatCurrency, formatPercent } from "../utils/formatters";
-
-// ---------------------------------------------------------------------------
-// Chart color palette (consistent with CSS vars)
-// ---------------------------------------------------------------------------
-
-const COLORS = {
-  hysa: "#60a5fa",
-  brokerage: "#a78bfa",
-  roth_ira: "#2dd4aa",
-  trad_401k: "#f59e0b",
-  roth_401k: "#34d399",
-  ss: "#fb923c",
-  withdrawal: "#f87171",
-  tax: "#94a3b8",
-  total: "#f0ede8",
-  income: "#2dd4aa",
-  target: "rgba(240,237,232,0.3)",
-  net_income: "#2dd4aa",
-  spill: "#f87171",
-};
+import { ACCOUNT_COLORS as COLORS } from "../constants/colors";
 
 const PLOTLY_LAYOUT_BASE: Partial<Plotly.Layout> = {
   paper_bgcolor: "transparent",
@@ -49,13 +35,13 @@ const PLOTLY_LAYOUT_BASE: Partial<Plotly.Layout> = {
     y: -0.18,
   },
   xaxis: {
-    Grid2color: "rgba(255,255,255,0.04)",
+    gridcolor: "rgba(255,255,255,0.04)",
     linecolor: "rgba(255,255,255,0.08)",
     tickfont: { size: 10 },
     zeroline: false,
   },
   yaxis: {
-    Grid2color: "rgba(255,255,255,0.04)",
+    gridcolor: "rgba(255,255,255,0.04)",
     linecolor: "rgba(255,255,255,0.08)",
     tickfont: { size: 10 },
     zeroline: false,
@@ -126,7 +112,7 @@ function PortfolioGrowthChart({ years }: { years: ProjectionYear[] }) {
         makeTrace("hysa", "HYSA", COLORS.hysa),
         makeTrace("brokerage", "Brokerage", COLORS.brokerage),
         makeTrace("roth_ira", "Roth IRA", COLORS.roth_ira),
-        makeTrace("traditional_401k", "Trad 401k", COLORS.trad_401k),
+        makeTrace("traditional_401k", "Trad 401k", COLORS.traditional_401k),
         makeTrace("roth_401k", "Roth 401k", COLORS.roth_401k),
       ]}
       layout={{
@@ -172,7 +158,7 @@ function PrePostTaxChart({ years }: { years: ProjectionYear[] }) {
           type: "scatter",
           mode: "lines",
           stackgroup: "one",
-          fillcolor: COLORS.trad_401k + "cc",
+          fillcolor: COLORS.traditional_401k + "cc",
           line: { width: 0 },
           hovertemplate: "<b>Pre-Tax</b>: $%{y:.0f}K<extra></extra>",
         },
@@ -296,7 +282,7 @@ function WithdrawalMixChart({ years }: { years: ProjectionYear[] }) {
           y: distYears.map((y) => y.withdrawals.traditional_401k / 1000),
           name: "Trad 401k",
           type: "bar",
-          marker: { color: COLORS.trad_401k + "cc" },
+          marker: { color: COLORS.traditional_401k + "cc" },
           hovertemplate: "<b>Trad 401k</b>: $%{y:.0f}K<extra></extra>",
         },
         {
@@ -540,7 +526,7 @@ function YearDetailRow({ y }: { y: ProjectionYear }) {
     {
       label: "Trad 401k",
       value: y.withdrawals.traditional_401k,
-      color: COLORS.trad_401k,
+      color: COLORS.traditional_401k,
     },
     {
       label: "Roth",

@@ -5,17 +5,30 @@
 // =============================================================================
 
 import {
-    AccountBalance as AccountIcon, ArrowForward as ArrowIcon, AttachMoney as SpendIcon, AutoFixHigh as OptimizeIcon, BeachAccess as RetireIcon, CheckCircleOutline as CheckIcon, TrendingUp as TrendingUpIcon, WarningAmber as WarnIcon
+  AccountBalance as AccountIcon,
+  ArrowForward as ArrowIcon,
+  AttachMoney as SpendIcon,
+  AutoFixHigh as OptimizeIcon,
+  BeachAccess as RetireIcon,
+  CheckCircleOutline as CheckIcon,
+  TrendingUp as TrendingUpIcon,
+  WarningAmber as WarnIcon,
 } from "@mui/icons-material";
 import {
-    Alert, Box,
-    Button, Chip, Grid2, LinearProgress, Typography
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Grid2,
+  LinearProgress,
+  Typography,
 } from "@mui/material";
 import { useInputStore } from "../store/inputStore";
 import { useResultStore } from "../store/resultStore";
 import { useUIStore } from "../store/uiStore";
 import type { ProjectionResult } from "../types";
 import { formatCurrency, formatPercent } from "../utils/formatters";
+import { ACCOUNT_COLORS as COLORS } from "../constants/colors";
 
 // ---------------------------------------------------------------------------
 // Stat card
@@ -110,26 +123,26 @@ function AccountBar({ result }: AccountBarProps) {
   if (total === 0) return null;
 
   const segments = [
-    { label: "HYSA", value: balances.hysa, color: "var(--color-hysa)" },
+    { label: "HYSA", value: balances.hysa, color: COLORS.hysa },
     {
       label: "Brokerage",
       value: balances.brokerage,
-      color: "var(--color-brokerage)",
+      color: COLORS.brokerage,
     },
     {
       label: "Roth IRA",
       value: balances.roth_ira,
-      color: "var(--color-roth-ira)",
+      color: COLORS.roth_ira,
     },
     {
       label: "Trad 401k",
       value: balances.traditional_401k,
-      color: "var(--color-trad-401k)",
+      color: COLORS.traditional_401k,
     },
     {
       label: "Roth 401k",
       value: balances.roth_401k,
-      color: "var(--color-roth-401k)",
+      color: COLORS.roth_401k,
     },
   ].filter((s) => s.value > 0);
 
