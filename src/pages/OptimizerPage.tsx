@@ -4,27 +4,20 @@
 // Roth conversion ladder, withdrawal source mix, and SS claiming comparison.
 // =============================================================================
 
-import { useState } from "react";
 import {
-  Box,
-  Typography,
-  Grid,
-  Chip,
-  Alert,
-  Button,
-  CircularProgress,
-  Tooltip,
-} from "@mui/material";
-import {
-  AutoFixHigh as OptimizeIcon,
-  InfoOutlined as InfoIcon,
+    AutoFixHigh as OptimizeIcon,
+    InfoOutlined as InfoIcon
 } from "@mui/icons-material";
+import {
+    Alert, Box, Button, Chip, CircularProgress, Grid2, Tooltip, Typography
+} from "@mui/material";
+import { useState } from "react";
 import Plot from "react-plotly.js";
-import { useResultStore } from "../store/resultStore";
-import { useInputStore } from "../store/inputStore";
 import { optimizerApi } from "../api";
-import { formatCurrency, formatPercent } from "../utils/formatters";
+import { useInputStore } from "../store/inputStore";
+import { useResultStore } from "../store/resultStore";
 import type { ProjectionYear } from "../types";
+import { formatCurrency, formatPercent } from "../utils/formatters";
 
 const LAYOUT = {
   paper_bgcolor: "transparent",
@@ -38,13 +31,13 @@ const LAYOUT = {
     y: -0.18,
   },
   xaxis: {
-    gridcolor: "rgba(255,255,255,0.04)",
+    Grid2color: "rgba(255,255,255,0.04)",
     linecolor: "rgba(255,255,255,0.08)",
     tickfont: { size: 10 },
     zeroline: false,
   },
   yaxis: {
-    gridcolor: "rgba(255,255,255,0.04)",
+    Grid2color: "rgba(255,255,255,0.04)",
     linecolor: "rgba(255,255,255,0.08)",
     tickfont: { size: 10 },
     zeroline: false,
@@ -367,7 +360,7 @@ function RothLadderChart({
           side: "right",
           tickprefix: "$",
           ticksuffix: "K",
-          gridcolor: "transparent",
+          Grid2color: "transparent",
           tickfont: { size: 10, color: "#5c6480" },
         },
         height: 260,
@@ -674,7 +667,7 @@ export function OptimizerPage() {
       <RationaleCard rationale={optimizedStrategy.rationale} />
 
       {/* Key metrics */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Grid2 container spacing={2} sx={{ mb: 3 }}>
         {[
           {
             label: "Portfolio Survives?",
@@ -701,7 +694,7 @@ export function OptimizerPage() {
             positive: optimizedStrategy.residual_balance > 0,
           },
         ].map((m) => (
-          <Grid key={m.label} size={{ xs: 6, md: 3 }}>
+          <Grid2 key={m.label} size={{ xs: 6, md: 3 }}>
             <Box
               sx={{
                 p: 2,
@@ -736,9 +729,9 @@ export function OptimizerPage() {
                 {m.value}
               </Typography>
             </Box>
-          </Grid>
+          </Grid2>
         ))}
-      </Grid>
+      </Grid2>
 
       {/* Efficiency insight chips */}
       <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 3 }}>

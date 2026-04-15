@@ -4,37 +4,16 @@
 // healthcare, and Roth ladder settings.
 // =============================================================================
 
-import { useState } from "react";
 import {
-  Box,
-  Typography,
-  Grid,
-  TextField,
-  Switch,
-  FormControlLabel,
-  Slider,
-  Divider,
-  Collapse,
-  IconButton,
-  Tooltip,
-  Button,
-  InputAdornment,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Alert,
-  Snackbar,
-} from "@mui/material";
-import {
-  ExpandMore as ExpandIcon,
-  ExpandLess as CollapseIcon,
-  Save as SaveIcon,
-  InfoOutlined as InfoIcon,
+    ExpandLess as CollapseIcon, ExpandMore as ExpandIcon, InfoOutlined as InfoIcon, Save as SaveIcon
 } from "@mui/icons-material";
+import {
+    Alert, Box, Button, Collapse, Divider, FormControl, FormControlLabel, Grid2, IconButton, InputAdornment, InputLabel, MenuItem, Select, Slider, Snackbar, Switch, TextField, Tooltip, Typography
+} from "@mui/material";
+import { useState } from "react";
+import { accountApi, assumptionsApi, contributionApi, personApi } from "../api";
 import { useInputStore } from "../store/inputStore";
 import { useUIStore } from "../store/uiStore";
-import { assumptionsApi, accountApi, contributionApi, personApi } from "../api";
 import type { AccountType, AssumptionsCreate } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -279,23 +258,23 @@ function AccountRow({ accountType }: AccountRowProps) {
           {ACCOUNT_LABELS[accountType]}
         </Typography>
       </Box>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid2 container spacing={2}>
+        <Grid2 size={{ xs: 12, sm: 6 }}>
           <CurrencyInput
             label="Current Balance"
             value={balance}
             onChange={handleBalanceChange}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        </Grid2>
+        <Grid2 size={{ xs: 12, sm: 6 }}>
           <PercentInput
             label="Expected Return (base)"
             value={returnBase}
             onChange={handleReturnChange}
             info="Conservative/optimistic automatically set ±3%. Adjust in advanced settings."
           />
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
     </Box>
   );
 }
@@ -585,8 +564,8 @@ export function InputsPage() {
           severity="info"
           sx={{ mb: 2, border: "1px solid var(--color-accent)" }}
         >
-          Optimal contribution suggestions have been applied to your accounts below. Please
-          Save All to avoid losing these changes.
+          Optimal contribution suggestions have been applied to your accounts
+          below. Please Save All to avoid losing these changes.
         </Alert>
       )}
 
@@ -594,8 +573,8 @@ export function InputsPage() {
           Personal
           ---------------------------------------------------------------- */}
       <Section id="personal" title="Personal Details">
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid2 container spacing={2}>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <FieldLabel label="Your Birth Year" />
             <TextField
               fullWidth
@@ -608,8 +587,8 @@ export function InputsPage() {
               InputProps={{ inputProps: { min: 1940, max: 2000 } }}
               size="small"
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <FieldLabel label="Spouse Birth Year" />
             <TextField
               fullWidth
@@ -622,8 +601,8 @@ export function InputsPage() {
               InputProps={{ inputProps: { min: 1940, max: 2000 } }}
               size="small"
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <FieldLabel
               label={`Your Retirement Age: ${primaryRetireAge}`}
               info="Age at which you plan to stop working."
@@ -649,8 +628,8 @@ export function InputsPage() {
               Current age: {currentAge} · Years until retirement:{" "}
               {Math.max(0, primaryRetireAge - currentAge)}
             </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <FieldLabel
               label={`Spouse Retirement Age: ${spouseRetireAge}`}
               info="Spouse's planned retirement age. Can differ from yours."
@@ -670,8 +649,8 @@ export function InputsPage() {
               }))}
               valueLabelDisplay="auto"
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <FieldLabel
               label={`Plan Through Age: ${assumptions?.plan_to_age ?? 90}`}
               info="Portfolio longevity target. 90–95 is a common conservative choice."
@@ -688,40 +667,40 @@ export function InputsPage() {
               }))}
               valueLabelDisplay="auto"
             />
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Section>
 
       {/* ----------------------------------------------------------------
           Income
           ---------------------------------------------------------------- */}
       <Section id="income" title="Income & Retirement Goals">
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid2 container spacing={2}>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
               label="Current Household Income"
               value={assumptions?.current_income ?? 0}
               onChange={(v) => updateAssumption("current_income", v)}
               info="Combined household income. Used for Social Security projections."
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
               label="Desired Retirement Income (today's $)"
               value={assumptions?.desired_retirement_income ?? 0}
               onChange={(v) => updateAssumption("desired_retirement_income", v)}
               info="Annual spending target in retirement, in today's dollars. The model inflates this to nominal future dollars."
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <PercentInput
               label="Inflation Rate"
               value={assumptions?.inflation_rate ?? 0.03}
               onChange={(v) => updateAssumption("inflation_rate", v)}
               info="Annual inflation assumption. 2.5–3.5% is typical."
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Return Scenario</InputLabel>
               <Select
@@ -739,8 +718,8 @@ export function InputsPage() {
                 <MenuItem value="optimistic">Optimistic</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Section>
 
       {/* ----------------------------------------------------------------
@@ -756,8 +735,8 @@ export function InputsPage() {
           Contributions
           ---------------------------------------------------------------- */}
       <Section id="contributions" title="Annual Contributions">
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid2 container spacing={2}>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
               label="Traditional 401(k) — Employee"
               value={trad401kContrib?.annual_amount ?? 0}
@@ -766,8 +745,8 @@ export function InputsPage() {
               }
               info="Your annual employee contribution. IRS limit enforced."
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
               label="Roth 401(k) — Employee"
               value={roth401kContrib?.annual_amount ?? 0}
@@ -776,8 +755,8 @@ export function InputsPage() {
               }
               info="Combined with traditional 401(k) cannot exceed IRS employee limit."
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
               label="Employer Match"
               value={trad401kContrib?.employer_match_amount ?? 0}
@@ -786,8 +765,8 @@ export function InputsPage() {
               }
               info="Annual employer 401(k) match. Does not count toward employee limits."
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
               label="Roth IRA (Combined Couple)"
               value={rothIraContrib?.annual_amount ?? 0}
@@ -796,16 +775,16 @@ export function InputsPage() {
               }
               info="Combined backdoor Roth IRA contributions for both spouses. Limit is 2× the individual IRS limit."
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
               label="High-Yield Savings (HYSA)"
               value={hysaContrib?.annual_amount ?? 0}
               onChange={(v) => updateContrib(hysaAccount, "annual_amount", v)}
               info="Annual cash savings added to your HYSA. Used as the first bridge drawdown source in early retirement."
             />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
               label="Brokerage"
               value={brokerageContrib?.annual_amount ?? 0}
@@ -814,8 +793,8 @@ export function InputsPage() {
               }
               info="Annual contributions to your taxable brokerage account. Gains taxed at LTCG rates in retirement."
             />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 12 }}>
             <FormControlLabel
               control={
                 <Switch
@@ -843,8 +822,8 @@ export function InputsPage() {
                 </Box>
               }
             />
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Section>
 
       {/* ----------------------------------------------------------------
@@ -855,16 +834,16 @@ export function InputsPage() {
         title="Healthcare (Pre-Medicare)"
         defaultOpen={false}
       >
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid2 container spacing={2}>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
               label="Annual Healthcare Cost (today's $)"
               value={assumptions?.healthcare_annual_cost ?? 0}
               onChange={(v) => updateAssumption("healthcare_annual_cost", v)}
               info="Estimated annual out-of-pocket healthcare cost from retirement until Medicare at 65. Inflated each year in the model."
             />
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
         <Typography
           sx={{ fontSize: "0.75rem", color: "var(--text-muted)", mt: 1.5 }}
         >

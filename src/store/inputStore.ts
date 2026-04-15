@@ -8,12 +8,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type {
-  Account,
-  Assumptions,
-  Contribution,
-  Person,
-  RothConversion,
-  SSClaiming,
+    Account,
+    Assumptions,
+    Contribution,
+    Person,
+    RothConversion,
+    SSClaiming
 } from '../types'
 
 interface InputState {

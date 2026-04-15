@@ -5,31 +5,29 @@
 // the Inputs page via the contribution store.
 // =============================================================================
 
-import { useState } from "react";
 import {
-  Box,
-  Typography,
-  Grid,
-  Switch,
-  Button,
-  Alert,
-  Divider,
-  Chip,
-  Tooltip,
-  LinearProgress,
-} from "@mui/material";
-import {
-  AutoMode as SolveIcon,
-  CheckCircleOutline as CheckIcon,
-  ErrorOutline as ErrorIcon,
-  ArrowForward as ApplyIcon,
-  InfoOutlined as InfoIcon,
+    ArrowForward as ApplyIcon, AutoMode as SolveIcon, CheckCircleOutline as CheckIcon,
+    ErrorOutline as ErrorIcon,
+    InfoOutlined as InfoIcon
 } from "@mui/icons-material";
+import {
+    Alert,
+    Box,
+    Button,
+    Chip,
+    Divider,
+    Grid2,
+    LinearProgress,
+    Switch,
+    Tooltip,
+    Typography
+} from "@mui/material";
+import { useState } from "react";
+import { contributionApi, contributionPlannerApi } from "../api";
 import { useInputStore } from "../store/inputStore";
 import { useUIStore } from "../store/uiStore";
-import { contributionPlannerApi, contributionApi } from "../api";
+import type { AccountType, ContributionPlanResult } from "../types";
 import { formatCurrency } from "../utils/formatters";
-import type { ContributionPlanResult, AccountType } from "../types";
 
 // ---------------------------------------------------------------------------
 // Account config
@@ -271,8 +269,8 @@ function SummaryCard({ result }: { result: ContributionPlanResult }) {
         </Box>
       </Box>
 
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 6, sm: 3 }}>
+      <Grid2 container spacing={2}>
+        <Grid2 size={{ xs: 6, sm: 3 }}>
           <Typography
             sx={{ fontSize: "0.6875rem", color: "var(--text-muted)", mb: 0.25 }}
           >
@@ -293,9 +291,9 @@ function SummaryCard({ result }: { result: ContributionPlanResult }) {
           >
             /year
           </Typography>
-        </Grid>
+        </Grid2>
         {result.employer_match_annual > 0 && (
-          <Grid size={{ xs: 6, sm: 3 }}>
+          <Grid2 size={{ xs: 6, sm: 3 }}>
             <Typography
               sx={{
                 fontSize: "0.6875rem",
@@ -316,9 +314,9 @@ function SummaryCard({ result }: { result: ContributionPlanResult }) {
             >
               /year
             </Typography>
-          </Grid>
+          </Grid2>
         )}
-        <Grid size={{ xs: 6, sm: 3 }}>
+        <Grid2 size={{ xs: 6, sm: 3 }}>
           <Typography
             sx={{ fontSize: "0.6875rem", color: "var(--text-muted)", mb: 0.25 }}
           >
@@ -335,9 +333,9 @@ function SummaryCard({ result }: { result: ContributionPlanResult }) {
           >
             /year
           </Typography>
-        </Grid>
+        </Grid2>
         {result.projection && (
-          <Grid size={{ xs: 6, sm: 3 }}>
+          <Grid2 size={{ xs: 6, sm: 3 }}>
             <Typography
               sx={{
                 fontSize: "0.6875rem",
@@ -365,9 +363,9 @@ function SummaryCard({ result }: { result: ContributionPlanResult }) {
             >
               at age {result.projection.years.at(-1)?.age_primary ?? "—"}
             </Typography>
-          </Grid>
+          </Grid2>
         )}
-      </Grid>
+      </Grid2>
     </Box>
   );
 }
@@ -559,9 +557,9 @@ export function ContributionPlannerPage() {
           >
             Accounts to optimize
           </Typography>
-          <Grid container spacing={1} sx={{ mb: 2.5 }}>
+          <Grid2 container spacing={1} sx={{ mb: 2.5 }}>
             {ACCOUNT_CONFIGS.map((cfg) => (
-              <Grid key={cfg.type} size={{ xs: 12, sm: 6 }}>
+              <Grid2 key={cfg.type} size={{ xs: 12, sm: 6 }}>
                 <Box
                   sx={{
                     display: "flex",
@@ -621,9 +619,9 @@ export function ContributionPlannerPage() {
                     size="small"
                   />
                 </Box>
-              </Grid>
+              </Grid2>
             ))}
-          </Grid>
+          </Grid2>
 
           <Divider sx={{ borderColor: "var(--border-subtle)", mb: 2 }} />
 
@@ -711,7 +709,7 @@ export function ContributionPlannerPage() {
           >
             Per-account breakdown
           </Typography>
-          <Grid container spacing={1.5} sx={{ mb: 2 }}>
+          <Grid2 container spacing={1.5} sx={{ mb: 2 }}>
             {ACCOUNT_CONFIGS.filter((cfg) => inclusion[cfg.includeKey]).map(
               (cfg) => {
                 const annual = result[cfg.resultKey] as number;
@@ -723,18 +721,18 @@ export function ContributionPlannerPage() {
                     ? result.employer_match_annual
                     : undefined;
                 return (
-                  <Grid key={cfg.type} size={{ xs: 12, sm: 6 }}>
+                  <Grid2 key={cfg.type} size={{ xs: 12, sm: 6 }}>
                     <ResultBar
                       config={cfg}
                       annual={annual}
                       limit={limit}
                       employerMatch={empMatch}
                     />
-                  </Grid>
+                  </Grid2>
                 );
               }
             )}
-          </Grid>
+          </Grid2>
 
           {/* Notes */}
           {result.notes.length > 0 && (

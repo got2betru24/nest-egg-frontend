@@ -11,9 +11,9 @@
 // =============================================================================
 
 import { useEffect, useState } from 'react'
+import { scenarioApi } from '../api'
 import { useInputStore } from '../store/inputStore'
 import { useResultStore } from '../store/resultStore'
-import { scenarioApi } from '../api'
 
 export function useScenarioLoader() {
   const {
