@@ -3,6 +3,7 @@
 React + TypeScript + Vite + MUI frontend for the NestEgg retirement planner.
 
 ## Stack
+
 - **React 18** + **TypeScript**
 - **Vite** — dev server with API proxy to FastAPI backend
 - **MUI v6** — dark-themed component library
@@ -36,7 +37,7 @@ src/
     Dashboard.tsx
     InputsPage.tsx
     ProjectionPage.tsx
-    OptimizerPage.tsx
+    WithdrawalStrategyPage.tsx
     SocialSecurityPage.tsx  # Also exports RetirementPage and TaxPage
     RetirementPage.tsx      # Re-export
     TaxPage.tsx             # Re-export
@@ -65,6 +66,7 @@ All colors, spacing, and typography are defined as CSS custom properties in
 styling across MUI components and custom CSS.
 
 Key tokens:
+
 - `--color-accent`: `#2dd4aa` — primary action color
 - `--font-display`: DM Serif Display
 - `--font-mono`: IBM Plex Mono (all numeric data)

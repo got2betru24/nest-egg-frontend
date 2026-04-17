@@ -3,53 +3,73 @@
 // Top-level layout: sidebar + topbar + main content area.
 // =============================================================================
 
-import { Box, IconButton, Tooltip } from '@mui/material'
+import { Box, IconButton, Tooltip } from "@mui/material";
 import {
   Dashboard as DashboardIcon,
   TuneRounded as InputsIcon,
+  AutoFixHigh as OptimizeIcon,
   ShowChart as ProjectionIcon,
-  EventRepeat as PlannerIcon,
-  AutoFixHigh as OptimizerIcon,
   SavingsRounded as SSIcon,
-  BeachAccess as RetirementIcon,
+  BeachAccess as WithdrawalIcon,
   ReceiptLong as TaxIcon,
   ChevronLeft,
   ChevronRight,
-} from '@mui/icons-material'
-import { useUIStore, type AppView } from '../../store/uiStore'
-import { ScenarioBar } from './ScenarioBar'
+} from "@mui/icons-material";
+import { useUIStore, type AppView } from "../../store/uiStore";
+import { ScenarioBar } from "./ScenarioBar";
 
 interface NavItem {
-  view: AppView
-  label: string
-  icon: React.ReactNode
+  view: AppView;
+  label: string;
+  icon: React.ReactNode;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { view: 'dashboard',            label: 'Dashboard',            icon: <DashboardIcon fontSize="small" /> },
-  { view: 'inputs',               label: 'Inputs',               icon: <InputsIcon fontSize="small" /> },
-  { view: 'projection',           label: 'Projection',           icon: <ProjectionIcon fontSize="small" /> },
-  { view: 'contribution-planner', label: 'Contribution Planner', icon: <PlannerIcon fontSize="small" /> },
-  { view: 'optimizer',            label: 'Withdrawal Planner',   icon: <OptimizerIcon fontSize="small" /> },
-  { view: 'social-security',      label: 'Social Security',      icon: <SSIcon fontSize="small" /> },
-  { view: 'retirement',           label: 'Retirement',           icon: <RetirementIcon fontSize="small" /> },
-  { view: 'tax',                  label: 'Tax',                  icon: <TaxIcon fontSize="small" /> },
-]
+  {
+    view: "dashboard",
+    label: "Dashboard",
+    icon: <DashboardIcon fontSize="small" />,
+  },
+  { view: "inputs", label: "Inputs", icon: <InputsIcon fontSize="small" /> },
+  {
+    view: "contribution-optimizer",
+    label: "Contribution Optimizer",
+    icon: <OptimizeIcon fontSize="small" />,
+  },
+  {
+    view: "projection",
+    label: "Projection",
+    icon: <ProjectionIcon fontSize="small" />,
+  },
+  {
+    view: "withdrawal-strategy",
+    label: "Withdrawal Strategy",
+    icon: <WithdrawalIcon fontSize="small" />,
+  },
+  {
+    view: "social-security",
+    label: "Social Security",
+    icon: <SSIcon fontSize="small" />,
+  },
+  { view: "tax", label: "Tax", icon: <TaxIcon fontSize="small" /> },
+];
 
 interface AppShellProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const { activeView, sidebarCollapsed, setActiveView, toggleSidebar } = useUIStore()
+  const { activeView, sidebarCollapsed, setActiveView, toggleSidebar } =
+    useUIStore();
 
   const sidebarWidth = sidebarCollapsed
-    ? 'var(--sidebar-collapsed-width)'
-    : 'var(--sidebar-width)'
+    ? "var(--sidebar-collapsed-width)"
+    : "var(--sidebar-width)";
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'var(--bg-base)' }}>
-
+    <Box
+      sx={{ display: "flex", minHeight: "100vh", bgcolor: "var(--bg-base)" }}
+    >
       {/* ----------------------------------------------------------------
           Sidebar
           ---------------------------------------------------------------- */}
@@ -58,26 +78,26 @@ export function AppShell({ children }: AppShellProps) {
         sx={{
           width: sidebarWidth,
           flexShrink: 0,
-          height: '100vh',
-          position: 'sticky',
+          height: "100vh",
+          position: "sticky",
           top: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          bgcolor: 'var(--bg-surface)',
-          borderRight: '1px solid var(--border-subtle)',
-          transition: 'width var(--transition-slow)',
-          overflow: 'hidden',
+          display: "flex",
+          flexDirection: "column",
+          bgcolor: "var(--bg-surface)",
+          borderRight: "1px solid var(--border-subtle)",
+          transition: "width var(--transition-slow)",
+          overflow: "hidden",
           zIndex: 100,
         }}
       >
         {/* Logo / wordmark */}
         <Box
           sx={{
-            height: 'var(--topbar-height)',
-            display: 'flex',
-            alignItems: 'center',
+            height: "var(--topbar-height)",
+            display: "flex",
+            alignItems: "center",
             px: sidebarCollapsed ? 1.5 : 2.5,
-            borderBottom: '1px solid var(--border-subtle)',
+            borderBottom: "1px solid var(--border-subtle)",
             flexShrink: 0,
             gap: 1.5,
           }}
@@ -87,16 +107,17 @@ export function AppShell({ children }: AppShellProps) {
             sx={{
               width: 23,
               height: 28,
-              borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
-              background: 'linear-gradient(135deg, var(--color-accent) 0%, #1a9e7f 100%)',
+              borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",
+              background:
+                "linear-gradient(135deg, var(--color-accent) 0%, #1a9e7f 100%)",
               flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.625rem',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "0.625rem",
               fontWeight: 700,
-              color: 'var(--text-inverse)',
-              fontFamily: 'var(--font-display)',
+              color: "var(--text-inverse)",
+              fontFamily: "var(--font-display)",
             }}
           >
             N
@@ -104,11 +125,11 @@ export function AppShell({ children }: AppShellProps) {
           {!sidebarCollapsed && (
             <Box
               sx={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '1.125rem',
-                color: 'var(--text-primary)',
-                letterSpacing: '-0.02em',
-                whiteSpace: 'nowrap',
+                fontFamily: "var(--font-display)",
+                fontSize: "1.125rem",
+                color: "var(--text-primary)",
+                letterSpacing: "-0.02em",
+                whiteSpace: "nowrap",
               }}
             >
               NestEgg
@@ -117,47 +138,68 @@ export function AppShell({ children }: AppShellProps) {
         </Box>
 
         {/* Nav items */}
-        <Box sx={{ flex: 1, py: 1.5, px: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+        <Box
+          sx={{
+            flex: 1,
+            py: 1.5,
+            px: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: 0.5,
+          }}
+        >
           {NAV_ITEMS.map((item) => {
-            const isActive = activeView === item.view
+            const isActive = activeView === item.view;
             return (
               <Tooltip
                 key={item.view}
-                title={sidebarCollapsed ? item.label : ''}
+                title={sidebarCollapsed ? item.label : ""}
                 placement="right"
                 arrow
               >
                 <Box
                   onClick={() => setActiveView(item.view)}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
+                    display: "flex",
+                    alignItems: "center",
                     gap: 1.5,
                     px: sidebarCollapsed ? 1.5 : 1.5,
                     py: 1,
-                    borderRadius: 'var(--radius-md)',
-                    cursor: 'pointer',
-                    transition: 'background var(--transition-fast)',
-                    bgcolor: isActive ? 'var(--color-accent-dim)' : 'transparent',
-                    color: isActive ? 'var(--color-accent)' : 'var(--text-secondary)',
-                    '&:hover': {
+                    borderRadius: "var(--radius-md)",
+                    cursor: "pointer",
+                    transition: "background var(--transition-fast)",
+                    bgcolor: isActive
+                      ? "var(--color-accent-dim)"
+                      : "transparent",
+                    color: isActive
+                      ? "var(--color-accent)"
+                      : "var(--text-secondary)",
+                    "&:hover": {
                       bgcolor: isActive
-                        ? 'var(--color-accent-dim)'
-                        : 'rgba(255,255,255,0.04)',
-                      color: isActive ? 'var(--color-accent)' : 'var(--text-primary)',
+                        ? "var(--color-accent-dim)"
+                        : "rgba(255,255,255,0.04)",
+                      color: isActive
+                        ? "var(--color-accent)"
+                        : "var(--text-primary)",
                     },
                   }}
                 >
-                  <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                  <Box
+                    sx={{
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
                     {item.icon}
                   </Box>
                   {!sidebarCollapsed && (
                     <Box
                       sx={{
-                        fontSize: '0.8125rem',
+                        fontSize: "0.8125rem",
                         fontWeight: isActive ? 500 : 400,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
                       }}
                     >
                       {item.label}
@@ -165,7 +207,7 @@ export function AppShell({ children }: AppShellProps) {
                   )}
                 </Box>
               </Tooltip>
-            )
+            );
           })}
         </Box>
 
@@ -173,15 +215,18 @@ export function AppShell({ children }: AppShellProps) {
         <Box
           sx={{
             p: 1,
-            borderTop: '1px solid var(--border-subtle)',
-            display: 'flex',
-            justifyContent: sidebarCollapsed ? 'center' : 'flex-end',
+            borderTop: "1px solid var(--border-subtle)",
+            display: "flex",
+            justifyContent: sidebarCollapsed ? "center" : "flex-end",
           }}
         >
           <IconButton
             size="small"
             onClick={toggleSidebar}
-            sx={{ color: 'var(--text-muted)', '&:hover': { color: 'var(--text-secondary)' } }}
+            sx={{
+              color: "var(--text-muted)",
+              "&:hover": { color: "var(--text-secondary)" },
+            }}
           >
             {sidebarCollapsed ? (
               <ChevronRight fontSize="small" />
@@ -198,23 +243,23 @@ export function AppShell({ children }: AppShellProps) {
       <Box
         sx={{
           flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
+          display: "flex",
+          flexDirection: "column",
           minWidth: 0,
-          overflow: 'hidden',
+          overflow: "hidden",
         }}
       >
         {/* Top bar */}
         <Box
           sx={{
-            height: 'var(--topbar-height)',
-            borderBottom: '1px solid var(--border-subtle)',
-            bgcolor: 'var(--bg-surface)',
-            display: 'flex',
-            alignItems: 'center',
+            height: "var(--topbar-height)",
+            borderBottom: "1px solid var(--border-subtle)",
+            bgcolor: "var(--bg-surface)",
+            display: "flex",
+            alignItems: "center",
             px: 3,
             flexShrink: 0,
-            position: 'sticky',
+            position: "sticky",
             top: 0,
             zIndex: 50,
           }}
@@ -227,7 +272,7 @@ export function AppShell({ children }: AppShellProps) {
           component="main"
           sx={{
             flex: 1,
-            overflow: 'auto',
+            overflow: "auto",
             p: 3,
           }}
         >
@@ -235,5 +280,5 @@ export function AppShell({ children }: AppShellProps) {
         </Box>
       </Box>
     </Box>
-  )
+  );
 }

@@ -1,7 +1,7 @@
 // =============================================================================
-// NestEgg - src/pages/OptimizerPage.tsx
-// Withdrawal Planner: recommended strategy, bracket-aware withdrawal order,
-// Roth conversion ladder, withdrawal source mix, and SS claiming comparison.
+// NestEgg - src/pages/WithdrawalStrategyPage.tsx
+// Withdrawal Strategy: recommended strategy, bracket-aware withdrawal order,
+// Roth conversion ladder, withdrawal source mix, and SS claiming recommendation.
 // =============================================================================
 
 import {
@@ -11,7 +11,6 @@ import {
 import {
   Alert,
   Box,
-  Button,
   Chip,
   CircularProgress,
   Grid2,
@@ -20,7 +19,6 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import Plot from "react-plotly.js";
-import { optimizerApi } from "../api";
 import { useInputStore } from "../store/inputStore";
 import { useResultStore } from "../store/resultStore";
 import type { ProjectionYear } from "../types";
@@ -262,49 +260,6 @@ function WithdrawalMixChart({ years }: { years: ProjectionYear[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Net income vs target chart
-// ---------------------------------------------------------------------------
-
-function SpendCoverageChart({ years }: { years: ProjectionYear[] }) {
-  const distYears = years.filter((y) => y.phase !== "accumulation");
-  if (distYears.length === 0) return null;
-
-  return (
-    <Plot
-      data={[
-        {
-          x: distYears.map((y) => y.calendar_year),
-          y: distYears.map((y) => y.income_target / 1000),
-          name: "Income Target",
-          type: "scatter",
-          mode: "lines",
-          line: { color: COLORS.target, width: 1.5, dash: "dot" },
-          hovertemplate: "<b>Target</b>: $%{y:.0f}K<extra></extra>",
-        },
-        {
-          x: distYears.map((y) => y.calendar_year),
-          y: distYears.map((y) => y.net_income / 1000),
-          name: "Net Spendable",
-          type: "scatter",
-          mode: "lines",
-          line: { color: COLORS.net_income, width: 2 },
-          fill: "tonexty",
-          fillcolor: "rgba(45,212,170,0.08)",
-          hovertemplate: "<b>Net Spend</b>: $%{y:.0f}K<extra></extra>",
-        },
-      ]}
-      layout={{
-        ...LAYOUT,
-        yaxis: { ...LAYOUT.yaxis, tickprefix: "$", ticksuffix: "K" },
-        height: 260,
-      }}
-      config={{ responsive: true, displayModeBar: false }}
-      style={{ width: "100%" }}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Roth ladder chart
 // ---------------------------------------------------------------------------
 
@@ -369,7 +324,7 @@ function RothLadderChart({
 }
 
 // ---------------------------------------------------------------------------
-// Dynamic withdrawal order explainer — replaces the old static list
+// Dynamic withdrawal order explainer
 // ---------------------------------------------------------------------------
 
 function WithdrawalOrderPanel() {
@@ -520,39 +475,17 @@ function WithdrawalOrderPanel() {
 }
 
 // ---------------------------------------------------------------------------
-// Main OptimizerPage
+// Main WithdrawalStrategyPage
 // ---------------------------------------------------------------------------
 
-export function OptimizerPage() {
-  const {
-    optimizedStrategy,
-    isRunningOptimizer,
-    setOptimizedStrategy,
-    setRunningOptimizer,
-    setOptimizerError,
-  } = useResultStore();
+export function WithdrawalStrategyPage() {
+  const { optimizedStrategy, isRunning } = useResultStore();
   const { scenarioId } = useInputStore();
-  const [chartTab, setChartTab] = useState<"mix" | "coverage" | "ladder">(
-    "mix"
-  );
-
-  const handleRunOptimizer = async () => {
-    if (!scenarioId) return;
-    setRunningOptimizer(true);
-    try {
-      const result = await optimizerApi.run({ scenarioId });
-      setOptimizedStrategy(result);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Optimizer failed";
-      setOptimizerError(msg);
-    } finally {
-      setRunningOptimizer(false);
-    }
-  };
+  const [chartTab, setChartTab] = useState<"mix" | "ladder">("mix");
 
   if (!scenarioId) return <Alert severity="info">No scenario loaded.</Alert>;
 
-  if (isRunningOptimizer) {
+  if (isRunning) {
     return (
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 4 }}>
         <CircularProgress size={20} sx={{ color: "var(--color-accent)" }} />
@@ -568,7 +501,7 @@ export function OptimizerPage() {
       <Box sx={{ maxWidth: 500 }}>
         <Box sx={{ mb: 3 }}>
           <Typography variant="h2" sx={{ fontSize: "1.75rem", mb: 0.5 }}>
-            Withdrawal Planner
+            Withdrawal Strategy
           </Typography>
           <Typography
             sx={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}
@@ -578,26 +511,16 @@ export function OptimizerPage() {
           </Typography>
         </Box>
         <Alert severity="info" sx={{ mb: 3 }}>
-          The optimizer tests all combinations of Social Security claiming ages
-          and Roth conversion ceilings, selecting the strategy that maximizes
-          net spendable income across your retirement — not just tax savings.
+          Click <strong>Run</strong> in the top bar to compute your projection
+          and optimal withdrawal strategy simultaneously.
         </Alert>
-        <Button
-          variant="contained"
-          startIcon={<OptimizeIcon />}
-          onClick={handleRunOptimizer}
-          size="large"
-        >
-          Run Optimizer
-        </Button>
       </Box>
     );
   }
 
   const projectionYears = optimizedStrategy.projection.years;
-
-  // Compute income coverage % from optimized projection
   const distYears = projectionYears.filter((y) => y.phase !== "accumulation");
+
   const coveragePct =
     distYears.length > 0
       ? Math.round(
@@ -607,7 +530,6 @@ export function OptimizerPage() {
         )
       : null;
 
-  // Effective tax rate on spending
   const totalGrossWithdrawals = distYears.reduce(
     (s, y) =>
       s +
@@ -622,7 +544,6 @@ export function OptimizerPage() {
   const effectiveTaxOnSpending =
     totalGrossWithdrawals > 0 ? totalTax / totalGrossWithdrawals : null;
 
-  // Count bracket spill years and brokerage-at-zero years
   const spillYears = distYears.filter((y) =>
     y.notes.some((n) => n.includes("Bracket spill"))
   ).length;
@@ -642,7 +563,7 @@ export function OptimizerPage() {
       >
         <Box>
           <Typography variant="h2" sx={{ fontSize: "1.75rem", mb: 0.5 }}>
-            Withdrawal Planner
+            Withdrawal Strategy
           </Typography>
           <Typography
             sx={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}
@@ -650,14 +571,6 @@ export function OptimizerPage() {
             Spend-maximizing retirement strategy.
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<OptimizeIcon fontSize="small" />}
-          onClick={handleRunOptimizer}
-        >
-          Re-run
-        </Button>
       </Box>
 
       {/* Rationale */}
@@ -781,7 +694,6 @@ export function OptimizerPage() {
       <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
         {[
           { key: "mix", label: "Withdrawal Source Mix" },
-          { key: "coverage", label: "Spend Coverage" },
           { key: "ladder", label: "Roth Ladder" },
         ].map((t) => (
           <Box
@@ -831,14 +743,9 @@ export function OptimizerPage() {
         >
           {chartTab === "mix"
             ? "Annual Income by Source (000s)"
-            : chartTab === "coverage"
-            ? "Net Spendable vs Target (000s)"
             : "Roth Conversion Schedule"}
         </Typography>
         {chartTab === "mix" && <WithdrawalMixChart years={projectionYears} />}
-        {chartTab === "coverage" && (
-          <SpendCoverageChart years={projectionYears} />
-        )}
         {chartTab === "ladder" && (
           <Box>
             <Box

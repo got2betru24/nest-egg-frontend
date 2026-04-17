@@ -1,13 +1,18 @@
 // =============================================================================
 // NestEgg - src/pages/ProjectionPage.tsx
 // Year-by-year projection charts: portfolio growth, income coverage vs target,
-// withdrawal source mix, tax breakdown. Scenario toggle + year detail drill-down.
+// pre/post-tax balance split, tax breakdown. Scenario toggle + year detail drill-down.
 // =============================================================================
 
-import { InfoOutlined as InfoIcon } from "@mui/icons-material";
+import {
+  InfoOutlined as InfoIcon,
+  ArrowForward as ArrowIcon,
+  WarningAmber as WarnIcon,
+} from "@mui/icons-material";
 import {
   Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
   Grid2,
@@ -19,6 +24,7 @@ import { useState } from "react";
 import Plot from "react-plotly.js";
 import { useInputStore } from "../store/inputStore";
 import { useResultStore } from "../store/resultStore";
+import { useUIStore } from "../store/uiStore";
 import type { ProjectionYear, ReturnScenario } from "../types";
 import { formatCurrency, formatPercent } from "../utils/formatters";
 import { ACCOUNT_COLORS as COLORS } from "../constants/colors";
@@ -229,85 +235,6 @@ function NetIncomeChart({ years }: { years: ProjectionYear[] }) {
       ]}
       layout={{
         ...PLOTLY_LAYOUT_BASE,
-        yaxis: {
-          ...PLOTLY_LAYOUT_BASE.yaxis,
-          tickprefix: "$",
-          ticksuffix: "K",
-        },
-        height: 340,
-      }}
-      config={{ responsive: true, displayModeBar: false }}
-      style={{ width: "100%" }}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Chart: Withdrawal source mix (the algorithm made visible)
-// ---------------------------------------------------------------------------
-
-function WithdrawalMixChart({ years }: { years: ProjectionYear[] }) {
-  const distYears = years.filter((y) => y.phase !== "accumulation");
-  if (distYears.length === 0) return null;
-
-  return (
-    <Plot
-      data={[
-        {
-          x: distYears.map((y) => y.calendar_year),
-          y: distYears.map((y) => (y.ss_primary + y.ss_spouse) / 1000),
-          name: "Social Security",
-          type: "bar",
-          marker: { color: COLORS.ss + "cc" },
-          hovertemplate: "<b>SS</b>: $%{y:.0f}K<extra></extra>",
-        },
-        {
-          x: distYears.map((y) => y.calendar_year),
-          y: distYears.map((y) => y.withdrawals.hysa / 1000),
-          name: "HYSA",
-          type: "bar",
-          marker: { color: COLORS.hysa + "cc" },
-          hovertemplate: "<b>HYSA</b>: $%{y:.0f}K<extra></extra>",
-        },
-        {
-          x: distYears.map((y) => y.calendar_year),
-          y: distYears.map((y) => y.withdrawals.brokerage / 1000),
-          name: "Brokerage (LTCG)",
-          type: "bar",
-          marker: { color: COLORS.brokerage + "cc" },
-          hovertemplate: "<b>Brokerage</b>: $%{y:.0f}K<extra></extra>",
-        },
-        {
-          x: distYears.map((y) => y.calendar_year),
-          y: distYears.map((y) => y.withdrawals.traditional_401k / 1000),
-          name: "Trad 401k",
-          type: "bar",
-          marker: { color: COLORS.traditional_401k + "cc" },
-          hovertemplate: "<b>Trad 401k</b>: $%{y:.0f}K<extra></extra>",
-        },
-        {
-          x: distYears.map((y) => y.calendar_year),
-          y: distYears.map(
-            (y) => (y.withdrawals.roth_ira + y.withdrawals.roth_401k) / 1000
-          ),
-          name: "Roth",
-          type: "bar",
-          marker: { color: COLORS.roth_ira + "cc" },
-          hovertemplate: "<b>Roth</b>: $%{y:.0f}K<extra></extra>",
-        },
-        {
-          x: distYears.map((y) => y.calendar_year),
-          y: distYears.map((y) => y.income_target / 1000),
-          name: "Income Target",
-          type: "scatter",
-          mode: "lines",
-          line: { color: COLORS.target, width: 1.5, dash: "dot" },
-          hovertemplate: "<b>Target</b>: $%{y:.0f}K<extra></extra>",
-        },
-      ]}
-      layout={{
-        ...PLOTLY_LAYOUT_BASE,
-        barmode: "stack",
         yaxis: {
           ...PLOTLY_LAYOUT_BASE.yaxis,
           tickprefix: "$",
@@ -686,6 +613,10 @@ function YearDetailRow({ y }: { y: ProjectionYear }) {
                         ),
                       },
                       {
+                        label: "Effective Rate",
+                        value: formatPercent(y.tax.total_effective_rate),
+                      },
+                      {
                         label: "Marginal Rate",
                         value: formatPercent(y.tax.marginal_rate),
                       },
@@ -818,15 +749,12 @@ function YearDetailRow({ y }: { y: ProjectionYear }) {
 // ---------------------------------------------------------------------------
 
 export function ProjectionPage() {
-  const {
-    projections,
-    activeScenario,
-    setActiveScenario,
-    isRunningProjection,
-  } = useResultStore();
-  const { scenarioId, assumptions } = useInputStore();
+  const { projections, activeScenario, setActiveScenario, isRunning } =
+    useResultStore();
+  const { scenarioId } = useInputStore();
+  const { setActiveView } = useUIStore();
   const [chartTab, setChartTab] = useState<
-    "portfolio" | "pretax" | "coverage" | "mix" | "tax"
+    "portfolio" | "pretax" | "coverage" | "tax"
   >("portfolio");
 
   const projection = projections[activeScenario];
@@ -841,7 +769,7 @@ export function ProjectionPage() {
     return <Alert severity="info">No scenario loaded.</Alert>;
   }
 
-  if (isRunningProjection) {
+  if (isRunning) {
     return (
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 4 }}>
         <CircularProgress size={20} sx={{ color: "var(--color-accent)" }} />
@@ -920,6 +848,29 @@ export function ProjectionPage() {
         </Alert>
       )}
 
+      {/* Portfoloio shortfall warning */}
+      {projection && !projection.success && (
+        <Alert
+          icon={<WarnIcon fontSize="small" />}
+          severity="warning"
+          sx={{ mb: 3, alignItems: "center" }}
+          action={
+            <Button
+              size="small"
+              color="inherit"
+              endIcon={<ArrowIcon fontSize="small" />}
+              onClick={() => setActiveView("contribution-optimizer")}
+            >
+              Contribution Optimizer
+            </Button>
+          }
+        >
+          <strong>Portfolio shortfall detected.</strong> Portfolio depletes at
+          age {projection.depletion_age}. Run the contribution optimizer for
+          recommendations.
+        </Alert>
+      )}
+
       {/* Status chips */}
       <Box sx={{ display: "flex", gap: 1, mb: 3, flexWrap: "wrap" }}>
         <Chip
@@ -964,7 +915,6 @@ export function ProjectionPage() {
           { key: "portfolio", label: "Portfolio by Account" },
           { key: "pretax", label: "Pre vs Post-Tax" },
           { key: "coverage", label: "Income Coverage" },
-          { key: "mix", label: "Withdrawal Mix" },
           { key: "tax", label: "Tax Burden" },
         ].map((t) => (
           <Box
@@ -990,36 +940,6 @@ export function ProjectionPage() {
             }}
           >
             {t.label}
-            {t.key === "coverage" && (
-              <Box
-                component="span"
-                sx={{
-                  ml: 0.5,
-                  fontSize: "0.65rem",
-                  bgcolor: "rgba(45,212,170,0.2)",
-                  color: "var(--color-accent)",
-                  borderRadius: 1,
-                  px: 0.5,
-                }}
-              >
-                new
-              </Box>
-            )}
-            {t.key === "mix" && (
-              <Box
-                component="span"
-                sx={{
-                  ml: 0.5,
-                  fontSize: "0.65rem",
-                  bgcolor: "rgba(45,212,170,0.2)",
-                  color: "var(--color-accent)",
-                  borderRadius: 1,
-                  px: 0.5,
-                }}
-              >
-                new
-              </Box>
-            )}
           </Box>
         ))}
       </Box>
@@ -1033,15 +953,12 @@ export function ProjectionPage() {
             ? "Pre-Tax vs Post-Tax Balance (000s)"
             : chartTab === "coverage"
             ? "Net Spendable Income vs Target (000s)"
-            : chartTab === "mix"
-            ? "Annual Withdrawal Source Mix (000s)"
             : "Annual Tax Burden (000s)"
         }
       >
         {chartTab === "portfolio" && <PortfolioGrowthChart years={years} />}
         {chartTab === "pretax" && <PrePostTaxChart years={years} />}
         {chartTab === "coverage" && <NetIncomeChart years={years} />}
-        {chartTab === "mix" && <WithdrawalMixChart years={years} />}
         {chartTab === "tax" && <TaxChart years={years} />}
       </ChartPanel>
 
@@ -1074,40 +991,6 @@ export function ProjectionPage() {
             Net spendable is gross income minus estimated taxes. Red dots
             indicate years where net income falls more than $100 below the
             inflation-adjusted target.
-          </Typography>
-        </Box>
-      )}
-
-      {/* Mix chart explanation */}
-      {chartTab === "mix" && (
-        <Box
-          sx={{
-            mt: 1.5,
-            px: 0.5,
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 0.75,
-          }}
-        >
-          <InfoIcon
-            sx={{
-              fontSize: 13,
-              color: "var(--text-muted)",
-              mt: "2px",
-              flexShrink: 0,
-            }}
-          />
-          <Typography
-            sx={{
-              fontSize: "0.75rem",
-              color: "var(--text-muted)",
-              lineHeight: 1.5,
-            }}
-          >
-            Each year's income is assembled using the bracket-aware withdrawal
-            optimizer: HYSA and brokerage (at 0% LTCG where possible) first,
-            traditional 401k up to bracket ceiling, Roth as last resort. Expand
-            any row below to see per-year decisions.
           </Typography>
         </Box>
       )}

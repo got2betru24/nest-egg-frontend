@@ -4,6 +4,7 @@
 // =============================================================================
 
 import { create } from 'zustand'
+import { projectionApi, optimizerApi } from '../api'
 import type { OptimizedStrategy, ProjectionResult, ReturnScenario } from '../types'
 
 interface ResultState {
@@ -17,8 +18,7 @@ interface ResultState {
   optimizedStrategy: OptimizedStrategy | null
 
   // Loading states
-  isRunningProjection: boolean
-  isRunningOptimizer: boolean
+  isRunning: boolean
 
   // Error states
   projectionError: string | null
@@ -28,11 +28,12 @@ interface ResultState {
   setProjection: (scenario: ReturnScenario, result: ProjectionResult) => void
   setActiveScenario: (scenario: ReturnScenario) => void
   setOptimizedStrategy: (strategy: OptimizedStrategy | null) => void
-  setRunningProjection: (running: boolean) => void
-  setRunningOptimizer: (running: boolean) => void
   setProjectionError: (error: string | null) => void
   setOptimizerError: (error: string | null) => void
   clearResults: () => void
+
+  // Combined run — fires projection + optimizer in parallel
+  runAll: (scenarioId: number, returnScenario: ReturnScenario) => Promise<void>
 
   // Derived helpers
   getActiveProjection: () => ProjectionResult | null
@@ -42,8 +43,7 @@ export const useResultStore = create<ResultState>()((set, get) => ({
   projections: {},
   activeScenario: 'base',
   optimizedStrategy: null,
-  isRunningProjection: false,
-  isRunningOptimizer: false,
+  isRunning: false,
   projectionError: null,
   optimizerError: null,
 
@@ -58,8 +58,6 @@ export const useResultStore = create<ResultState>()((set, get) => ({
   setOptimizedStrategy: (strategy) =>
     set({ optimizedStrategy: strategy, optimizerError: null }),
 
-  setRunningProjection: (running) => set({ isRunningProjection: running }),
-  setRunningOptimizer: (running) => set({ isRunningOptimizer: running }),
   setProjectionError: (error) => set({ projectionError: error }),
   setOptimizerError: (error) => set({ optimizerError: error }),
 
@@ -70,6 +68,29 @@ export const useResultStore = create<ResultState>()((set, get) => ({
       projectionError: null,
       optimizerError: null,
     }),
+
+  runAll: async (scenarioId, returnScenario) => {
+    set({ isRunning: true, projectionError: null, optimizerError: null })
+    try {
+      const [projResult, optResult] = await Promise.all([
+        projectionApi.run(scenarioId, returnScenario, true),
+        optimizerApi.run({ scenarioId }),
+      ])
+      set((state) => ({
+        projections: { ...state.projections, [returnScenario]: projResult },
+        optimizedStrategy: optResult,
+      }))
+    } catch (err: unknown) {
+      // Distinguish which call failed by checking the message — in practice
+      // both use the same scenarioId so a DB/input error will affect both.
+      // We surface a single error message; individual setters can be called
+      // directly for more granular recovery if needed.
+      const msg = err instanceof Error ? err.message : 'Run failed'
+      set({ projectionError: msg, optimizerError: msg })
+    } finally {
+      set({ isRunning: false })
+    }
+  },
 
   getActiveProjection: () => {
     const { projections, activeScenario } = get()

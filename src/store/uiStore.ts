@@ -3,64 +3,64 @@
 // Zustand store for UI state — active view, toggles, sidebar state.
 // =============================================================================
 
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type AppView =
-  | 'dashboard'
-  | 'inputs'
-  | 'projection'
-  | 'contribution-planner'
-  | 'optimizer'
-  | 'social-security'
-  | 'retirement'
-  | 'tax'
+  | "dashboard"
+  | "inputs"
+  | "projection"
+  | "contribution-optimizer"
+  | "withdrawal-strategy"
+  | "social-security"
+  | "retirement"
+  | "tax";
 
-export type ChartView = 'combined' | 'by-account' | 'income' | 'tax'
-export type BalanceView = 'total' | 'pretax' | 'posttax'
+export type ChartView = "combined" | "by-account" | "income" | "tax";
+export type BalanceView = "total" | "pretax" | "posttax";
 
 interface UIState {
   // Navigation
-  activeView: AppView
-  sidebarCollapsed: boolean
+  activeView: AppView;
+  sidebarCollapsed: boolean;
 
   // Chart controls
-  chartView: ChartView
-  balanceView: BalanceView
-  showInflationAdjusted: boolean
+  chartView: ChartView;
+  balanceView: BalanceView;
+  showInflationAdjusted: boolean;
 
   // Scenario comparison overlay
-  showAllScenarios: boolean
+  showAllScenarios: boolean;
 
   // Input panel expand states
-  expandedSections: Record<string, boolean>
+  expandedSections: Record<string, boolean>;
 
   // Scenario management modal
-  scenarioModalOpen: boolean
+  scenarioModalOpen: boolean;
 
   // Optimizer alert banner
-  optimizerAlert: boolean
+  optimizerAlert: boolean;
 
   // Actions
-  setActiveView: (view: AppView) => void
-  toggleSidebar: () => void
-  setChartView: (view: ChartView) => void
-  setBalanceView: (view: BalanceView) => void
-  toggleInflationAdjusted: () => void
-  toggleAllScenarios: () => void
-  toggleSection: (section: string) => void
-  setScenarioModalOpen: (open: boolean) => void
-  setOptimizerAlert: (show: boolean) => void
+  setActiveView: (view: AppView) => void;
+  toggleSidebar: () => void;
+  setChartView: (view: ChartView) => void;
+  setBalanceView: (view: BalanceView) => void;
+  toggleInflationAdjusted: () => void;
+  toggleAllScenarios: () => void;
+  toggleSection: (section: string) => void;
+  setScenarioModalOpen: (open: boolean) => void;
+  setOptimizerAlert: (show: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
-      activeView: 'dashboard',
+      activeView: "dashboard",
       showOptimizerAlert: false, //
       sidebarCollapsed: false,
-      chartView: 'combined',
-      balanceView: 'total',
+      chartView: "combined",
+      balanceView: "total",
       showInflationAdjusted: false,
       showAllScenarios: false,
       expandedSections: {
@@ -75,7 +75,8 @@ export const useUIStore = create<UIState>()(
       optimizerAlert: false,
 
       setActiveView: (view) => set({ activeView: view }),
-      toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+      toggleSidebar: () =>
+        set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       setChartView: (view) => set({ chartView: view }),
       setBalanceView: (view) => set({ balanceView: view }),
       toggleInflationAdjusted: () =>
@@ -90,10 +91,10 @@ export const useUIStore = create<UIState>()(
           },
         })),
       setScenarioModalOpen: (open) => set({ scenarioModalOpen: open }),
-      setOptimizerAlert: (show) => set({optimizerAlert: show}),
+      setOptimizerAlert: (show) => set({ optimizerAlert: show }),
     }),
     {
-      name: 'nestegg-ui',
+      name: "nestegg-ui",
       partialize: (s) => ({
         sidebarCollapsed: s.sidebarCollapsed,
         chartView: s.chartView,
@@ -103,4 +104,4 @@ export const useUIStore = create<UIState>()(
       }),
     }
   )
-)
+);

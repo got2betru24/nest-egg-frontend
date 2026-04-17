@@ -447,7 +447,7 @@ function QuickCard({ icon, title, description, view, accent }: QuickCardProps) {
 
 export function Dashboard() {
   const { scenarioId, assumptions, primary } = useInputStore();
-  const { getActiveProjection, optimizedStrategy, isRunningProjection } =
+  const { getActiveProjection, optimizedStrategy, isRunning } =
     useResultStore();
   const { setActiveView } = useUIStore();
 
@@ -557,7 +557,7 @@ export function Dashboard() {
               size="small"
               color="inherit"
               endIcon={<ArrowIcon fontSize="small" />}
-              onClick={() => setActiveView("optimizer")}
+              onClick={() => setActiveView("withdrawal-strategy")}
             >
               View strategy
             </Button>
@@ -572,10 +572,20 @@ export function Dashboard() {
         <Alert
           icon={<WarnIcon fontSize="small" />}
           severity="warning"
-          sx={{ mb: 3 }}
+          sx={{ mb: 3, alignItems: "center"  }}
+          action={
+            <Button
+              size="small"
+              color="inherit"
+              endIcon={<ArrowIcon fontSize="small" />}
+              onClick={() => setActiveView("contribution-optimizer")}
+            >
+              Contribution Optimizer
+            </Button>
+          }
         >
           <strong>Portfolio shortfall detected.</strong> Portfolio depletes at
-          age {projection.depletion_age}. Run the optimizer for recommendations.
+          age {projection.depletion_age}. Run the contribution optimizer for recommendations.
         </Alert>
       )}
 
@@ -832,6 +842,14 @@ export function Dashboard() {
             </Grid2>
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <QuickCard
+                icon={<OptimizeIcon fontSize="small" />}
+                title="Contribution Optimizer"
+                description="Optimizes annual contributions to reach your retirement goals."
+                view="contribution-optimizer"
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+              <QuickCard
                 icon={<TrendingUpIcon fontSize="small" />}
                 title="Projection"
                 description="Year-by-year account growth and income coverage"
@@ -840,19 +858,10 @@ export function Dashboard() {
             </Grid2>
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <QuickCard
-                icon={<OptimizeIcon fontSize="small" />}
-                title="Withdrawal Planner"
-                description="Optimal withdrawal order, Roth ladder, and SS timing"
-                view="optimizer"
-                accent
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-              <QuickCard
                 icon={<RetireIcon fontSize="small" />}
-                title="Retirement"
-                description="Bridge strategy and retirement income waterfall"
-                view="retirement"
+                title="Withdrawal Strategy"
+                description="Optimal withdrawal order, Roth ladder, and SS timing"
+                view="withdrawal-strategy"
               />
             </Grid2>
           </Grid2>
@@ -860,7 +869,7 @@ export function Dashboard() {
       )}
 
       {/* Loading overlay */}
-      {isRunningProjection && (
+      {isRunning && (
         <Box sx={{ mt: 3 }}>
           <LinearProgress />
           <Typography

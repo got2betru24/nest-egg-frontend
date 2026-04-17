@@ -1,5 +1,5 @@
 // =============================================================================
-// NestEgg - src/pages/ContributionPlannerPage.tsx
+// NestEgg - src/pages/ContributionOptimizerPage.tsx
 // Solves for the minimum annual contributions across enabled account types
 // needed to survive to plan_to_age. Results can be applied directly to
 // the Inputs page via the contribution store.
@@ -7,10 +7,10 @@
 
 import {
   ArrowForward as ApplyIcon,
+  AutoFixHigh as OptimizeIcon,
   CheckCircleOutline as CheckIcon,
   ErrorOutline as ErrorIcon,
   InfoOutlined as InfoIcon,
-  AutoMode as SolveIcon,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -377,7 +377,7 @@ function SummaryCard({ result }: { result: ContributionPlanResult }) {
 // Main page
 // ---------------------------------------------------------------------------
 
-export function ContributionPlannerPage() {
+export function ContributionOptimizerPage() {
   const { scenarioId, accounts, contributions, setContribution, markDirty } =
     useInputStore();
 
@@ -504,7 +504,7 @@ export function ContributionPlannerPage() {
       {/* Header */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h2" sx={{ fontSize: "1.75rem", mb: 0.5 }}>
-          Contribution Planner
+          Contribution Optimizer
         </Typography>
         <Typography
           sx={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}
@@ -660,7 +660,7 @@ export function ContributionPlannerPage() {
         variant="contained"
         size="large"
         fullWidth
-        startIcon={<SolveIcon />}
+        startIcon={<OptimizeIcon />}
         onClick={handleSolve}
         disabled={solving || !anyEnabled}
         sx={{ mb: 3, height: 48 }}

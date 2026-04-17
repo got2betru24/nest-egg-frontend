@@ -270,7 +270,7 @@ export interface ProjectionResult {
 }
 
 // ---------------------------------------------------------------------------
-// Optimizer
+// Withdrawal Strategy
 // ---------------------------------------------------------------------------
 
 export interface OptimizedStrategy {

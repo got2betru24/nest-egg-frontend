@@ -132,7 +132,7 @@ export function SocialSecurityPage() {
             {label}
           </Typography>
           {isRecommended && (
-            <Tooltip title="Recommended by the Withdrawal Planner optimizer for your specific portfolio and spending plan.">
+            <Tooltip title="Recommended by the Withdrawal Strategy optimizer for your specific portfolio and spending plan.">
               <Chip
                 label="Optimizer pick"
                 size="small"
@@ -303,7 +303,7 @@ export function SocialSecurityPage() {
                 severity="info"
                 sx={{ fontSize: "0.8125rem", mb: 2, py: 0.5 }}
               >
-                The Withdrawal Planner recommends claiming at{" "}
+                The Withdrawal Strategy optimizer recommends claiming at{" "}
                 <strong>{optimizerLabel}</strong> based on your full retirement
                 picture. Run the optimizer again any time inputs change.
               </Alert>
@@ -312,7 +312,7 @@ export function SocialSecurityPage() {
                 severity="warning"
                 sx={{ fontSize: "0.8125rem", mb: 2, py: 0.5 }}
               >
-                Run the <strong>Withdrawal Planner</strong> (Optimize button)
+                Run the <strong>Withdrawal Strategy optimizer</strong> (Optimize button)
                 to get a personalized claiming recommendation based on your
                 portfolio and spending plan.
               </Alert>

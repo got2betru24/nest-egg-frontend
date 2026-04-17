@@ -1,7 +1,7 @@
 // =============================================================================
 // NestEgg - src/components/layout/ScenarioBar.tsx
 // Top bar: active scenario name, save/load/new scenario controls,
-// dirty indicator, and run projection button.
+// dirty indicator, and run button (fires projection + optimizer in parallel).
 // =============================================================================
 
 import { useState } from "react";
@@ -29,31 +29,19 @@ import {
   ContentCopy as DuplicateIcon,
   FolderOpen as LoadIcon,
   PlayArrow as RunIcon,
-  AutoFixHigh as OptimizeIcon,
   FiberManualRecord as DotIcon,
   DeleteOutline as DeleteIcon,
 } from "@mui/icons-material";
 import { useInputStore } from "../../store/inputStore";
 import { useResultStore } from "../../store/resultStore";
 import { useUIStore } from "../../store/uiStore";
-import { projectionApi, optimizerApi, scenarioApi } from "../../api";
+import { scenarioApi } from "../../api";
 import type { Scenario } from "../../types";
 
 export function ScenarioBar() {
   const { scenarioId, scenarioName, isDirty, setScenario, markClean } =
     useInputStore();
-  const {
-    activeScenario,
-    isRunningProjection,
-    isRunningOptimizer,
-    setProjection,
-    setOptimizedStrategy,
-    setRunningProjection,
-    setRunningOptimizer,
-    setProjectionError,
-    setOptimizerError,
-    clearResults,
-  } = useResultStore();
+  const { activeScenario, isRunning, runAll, clearResults } = useResultStore();
   const { setActiveView } = useUIStore();
 
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -110,7 +98,6 @@ export function ScenarioBar() {
     try {
       await scenarioApi.delete(targetDeleteScenario.id);
 
-      // Update the list immediately
       setScenarios((prev) =>
         prev.filter((s) => s.id !== targetDeleteScenario.id)
       );
@@ -121,7 +108,6 @@ export function ScenarioBar() {
         setActiveView("dashboard");
         setDialogOpen(false);
       } else {
-        // Return to the load list after deleting a different one
         setDialogMode("load");
       }
     } catch (err) {
@@ -144,7 +130,6 @@ export function ScenarioBar() {
     setCreating(true);
     try {
       const duped = await scenarioApi.duplicate(scenarioId);
-      // Rename the duplicate to the user's chosen name
       const renamed = await scenarioApi.update(duped.id, {
         name: newName.trim(),
       });
@@ -158,39 +143,11 @@ export function ScenarioBar() {
     }
   };
 
-  const handleRunProjection = async () => {
+  const handleRun = async () => {
     if (!scenarioId) return;
-    setRunningProjection(true);
-    setProjectionError(null);
-    try {
-      const result = await projectionApi.run(scenarioId, activeScenario, true);
-      setProjection(activeScenario, result);
-      markClean();
-      setActiveView("projection");
-    } catch (err: unknown) {
-      setProjectionError(
-        err instanceof Error ? err.message : "Projection failed"
-      );
-    } finally {
-      setRunningProjection(false);
-    }
-  };
-
-  const handleRunOptimizer = async () => {
-    if (!scenarioId) return;
-    setRunningOptimizer(true);
-    setOptimizerError(null);
-    try {
-      const result = await optimizerApi.run({ scenarioId });
-      setOptimizedStrategy(result);
-      setActiveView("optimizer");
-    } catch (err: unknown) {
-      setOptimizerError(
-        err instanceof Error ? err.message : "Optimizer failed"
-      );
-    } finally {
-      setRunningOptimizer(false);
-    }
+    await runAll(scenarioId, activeScenario);
+    markClean();
+    setActiveView("projection");
   };
 
   return (
@@ -224,7 +181,7 @@ export function ScenarioBar() {
                 {scenarioName || "Untitled Scenario"}
               </Typography>
               {isDirty && (
-                <Tooltip title="Unsaved changes — run projection to update">
+                <Tooltip title="Unsaved changes — run to update">
                   <DotIcon
                     sx={{
                       fontSize: 8,
@@ -286,19 +243,19 @@ export function ScenarioBar() {
             </MenuItem>
           </Menu>
 
-          {/* Run Projection */}
+          {/* Single Run button — fires projection + optimizer in parallel */}
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
             startIcon={
-              isRunningProjection ? (
+              isRunning ? (
                 <CircularProgress size={12} sx={{ color: "inherit" }} />
               ) : (
                 <RunIcon fontSize="small" />
               )
             }
-            onClick={handleRunProjection}
-            disabled={!scenarioId || isRunningProjection}
+            onClick={handleRun}
+            disabled={!scenarioId || isRunning}
             sx={{
               fontSize: "0.75rem",
               height: 30,
@@ -307,31 +264,13 @@ export function ScenarioBar() {
               color: isDirty ? "var(--color-warning)" : undefined,
             }}
           >
-            {isRunningProjection ? "Running…" : "Run"}
-          </Button>
-
-          {/* Optimize */}
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={
-              isRunningOptimizer ? (
-                <CircularProgress size={12} sx={{ color: "inherit" }} />
-              ) : (
-                <OptimizeIcon fontSize="small" />
-              )
-            }
-            onClick={handleRunOptimizer}
-            disabled={!scenarioId || isRunningOptimizer}
-            sx={{ fontSize: "0.75rem", height: 30, px: 1.5 }}
-          >
-            {isRunningOptimizer ? "Optimizing…" : "Optimize"}
+            {isRunning ? "Running…" : "Run"}
           </Button>
         </Box>
       </Box>
 
       {/* ----------------------------------------------------------------
-          New / Load scenario dialog
+          New / Load / Duplicate / Delete scenario dialog
           ---------------------------------------------------------------- */}
       <Dialog
         open={dialogOpen}
@@ -434,7 +373,7 @@ export function ScenarioBar() {
                           sx={{
                             color: "inherit",
                             opacity: 0.5,
-                            "&:hover": { color: "#d32f2f" }, // Use a hardcoded red or your error var
+                            "&:hover": { color: "#d32f2f" },
                           }}
                         >
                           <DeleteIcon sx={{ fontSize: "1.2rem" }} />
@@ -444,11 +383,7 @@ export function ScenarioBar() {
                       <ListItemButton
                         onClick={() => handleLoadScenario(s)}
                         selected={s.id === scenarioId}
-                        sx={{
-                          borderRadius: "var(--radius-sm)",
-                          // Ensure the text doesn't overlap the icon
-                          pr: 5,
-                        }}
+                        sx={{ borderRadius: "var(--radius-sm)", pr: 5 }}
                       >
                         <ListItemText
                           primary={s.name}
