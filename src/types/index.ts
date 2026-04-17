@@ -42,6 +42,7 @@ export interface Person {
   birth_year: number
   birth_month: number
   planned_retirement_age: number
+  current_income: number
 }
 
 export interface PersonCreate {
@@ -49,6 +50,7 @@ export interface PersonCreate {
   birth_year: number
   birth_month?: number
   planned_retirement_age: number
+  current_income: number
 }
 
 // ---------------------------------------------------------------------------

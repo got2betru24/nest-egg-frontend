@@ -31,7 +31,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { accountApi, assumptionsApi, contributionApi, personApi } from "../api";
 import { useInputStore } from "../store/inputStore";
 import { useUIStore } from "../store/uiStore";
@@ -229,6 +229,32 @@ const ACCOUNT_TYPES: AccountType[] = [
   "roth_401k",
 ];
 
+// Default base returns by account type and return scenario.
+// Conservative/optimistic are always ±3% from base (mirrors handleReturnChange).
+const SCENARIO_BASE_RETURNS: Record<string, Record<AccountType, number>> = {
+  conservative: {
+    hysa: 0.03,
+    brokerage: 0.05,
+    roth_ira: 0.05,
+    traditional_401k: 0.05,
+    roth_401k: 0.05,
+  },
+  base: {
+    hysa: 0.04,
+    brokerage: 0.07,
+    roth_ira: 0.07,
+    traditional_401k: 0.07,
+    roth_401k: 0.07,
+  },
+  optimistic: {
+    hysa: 0.05,
+    brokerage: 0.10,
+    roth_ira: 0.10,
+    traditional_401k: 0.10,
+    roth_401k: 0.10,
+  },
+};
+
 interface AccountRowProps {
   accountType: AccountType;
 }
@@ -328,12 +354,15 @@ export function InputsPage() {
   >("idle");
   const [snackMsg, setSnackMsg] = useState<string | null>(null);
 
-  // Local person fields (birth years + retirement ages)
+  // Local person fields (birth years, retirement ages, individual incomes)
   const [primaryBirthYear, setPrimaryBirthYear] = useState(
     primary?.birth_year ?? new Date().getFullYear() - 45
   );
   const [primaryRetireAge, setPrimaryRetireAge] = useState(
     primary?.planned_retirement_age ?? 55
+  );
+  const [primaryIncome, setPrimaryIncome] = useState(
+    primary?.current_income ?? 0
   );
   const [spouseBirthYear, setSpouseBirthYear] = useState(
     spouse?.birth_year ?? new Date().getFullYear() - 41
@@ -341,6 +370,22 @@ export function InputsPage() {
   const [spouseRetireAge, setSpouseRetireAge] = useState(
     spouse?.planned_retirement_age ?? 55
   );
+  const [spouseIncome, setSpouseIncome] = useState(
+    spouse?.current_income ?? 0
+  );
+
+  // Sync local person fields when store hydrates (scenario load/duplicate/switch)
+  useEffect(() => {
+    setPrimaryBirthYear(primary?.birth_year ?? new Date().getFullYear() - 45);
+    setPrimaryRetireAge(primary?.planned_retirement_age ?? 55);
+    setPrimaryIncome(primary?.current_income ?? 0);
+  }, [primary]);
+
+  useEffect(() => {
+    setSpouseBirthYear(spouse?.birth_year ?? new Date().getFullYear() - 41);
+    setSpouseRetireAge(spouse?.planned_retirement_age ?? 55);
+    setSpouseIncome(spouse?.current_income ?? 0);
+  }, [spouse]);
 
   // Contribution field helpers
   const trad401kAccount = accounts["traditional_401k"];
@@ -383,6 +428,7 @@ export function InputsPage() {
         role: "primary",
         birth_year: primaryBirthYear,
         planned_retirement_age: primaryRetireAge,
+        current_income: primaryIncome,
       });
       setPrimary(updated);
     } else {
@@ -390,6 +436,7 @@ export function InputsPage() {
         role: "primary",
         birth_year: primaryBirthYear,
         planned_retirement_age: primaryRetireAge,
+        current_income: primaryIncome,
       });
       setPrimary(created);
     }
@@ -400,6 +447,7 @@ export function InputsPage() {
         role: "spouse",
         birth_year: spouseBirthYear,
         planned_retirement_age: spouseRetireAge,
+        current_income: spouseIncome,
       });
       setSpouse(updated);
     } else {
@@ -408,6 +456,7 @@ export function InputsPage() {
         role: "spouse",
         birth_year: spouseBirthYear,
         planned_retirement_age: spouseRetireAge,
+        current_income: spouseIncome,
       });
       setSpouse(created);
     }
@@ -503,6 +552,26 @@ export function InputsPage() {
     if (!assumptions) return;
     setAssumptions({ ...assumptions, [key]: value });
     markDirty();
+
+    // When the return scenario changes, update all account base returns to
+    // their defaults for that scenario. Users can still override per-account.
+    if (key === "return_scenario") {
+      const scenario = value as string;
+      const defaults = SCENARIO_BASE_RETURNS[scenario];
+      if (defaults) {
+        ACCOUNT_TYPES.forEach((type) => {
+          const account = accounts[type];
+          if (!account) return;
+          const base = defaults[type];
+          setAccount({
+            ...account,
+            return_conservative: Math.max(0, base - 0.03),
+            return_base: base,
+            return_optimistic: base + 0.03,
+          });
+        });
+      }
+    }
   };
 
   const updateContrib = async (
@@ -566,8 +635,8 @@ export function InputsPage() {
           {saveStatus === "saving"
             ? "Saving…"
             : saveStatus === "saved"
-            ? "Saved ✓"
-            : "Save All"}
+              ? "Saved ✓"
+              : "Save All"}
         </Button>
       </Box>
 
@@ -700,10 +769,18 @@ export function InputsPage() {
         <Grid2 container spacing={2}>
           <Grid2 size={{ xs: 12, sm: 6 }}>
             <CurrencyInput
-              label="Current Household Income"
-              value={assumptions?.current_income ?? 0}
-              onChange={(v) => updateAssumption("current_income", v)}
-              info="Combined household income. Used for Social Security projections."
+              label="Your Income"
+              value={primaryIncome}
+              onChange={(v) => { setPrimaryIncome(v); markDirty(); }}
+              info="Your individual earned income. Used to project your future Social Security earnings through retirement."
+            />
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 6 }}>
+            <CurrencyInput
+              label="Spouse Income"
+              value={spouseIncome}
+              onChange={(v) => { setSpouseIncome(v); markDirty(); }}
+              info="Spouse's individual earned income. Used to project their future Social Security earnings independently."
             />
           </Grid2>
           <Grid2 size={{ xs: 12, sm: 6 }}>
