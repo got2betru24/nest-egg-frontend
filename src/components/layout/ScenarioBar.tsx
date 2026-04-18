@@ -35,11 +35,29 @@ import {
 import { useInputStore } from "../../store/inputStore";
 import { useResultStore } from "../../store/resultStore";
 import { useUIStore } from "../../store/uiStore";
-import { scenarioApi } from "../../api";
-import type { Scenario } from "../../types";
+import { accountApi, assumptionsApi, contributionApi, personApi, scenarioApi } from "../../api";
+import type { AccountType, Scenario } from "../../types";
+import {
+  DEFAULT_INFLATION_RATE,
+  DEFAULT_PLAN_TO_AGE,
+  DEFAULT_PRIMARY_AGE_OFFSET,
+  DEFAULT_RETIREMENT_AGE,
+  DEFAULT_RETURN_SCENARIO,
+  DEFAULT_SPOUSE_AGE_OFFSET,
+  SCENARIO_BASE_RETURNS,
+} from "../../constants/defaults";
+
+const ACCOUNT_TYPES: AccountType[] = [
+  "hysa",
+  "brokerage",
+  "roth_ira",
+  "traditional_401k",
+  "roth_401k",
+];
 
 export function ScenarioBar() {
-  const { scenarioId, scenarioName, isDirty, setScenario, markClean } =
+  const { scenarioId, scenarioName, isDirty, setScenario, markClean,
+          setPrimary, setSpouse, setAssumptions, setAccount, setContribution } =
     useInputStore();
   const { activeScenario, isRunning, runAll, clearResults } = useResultStore();
   const { setActiveView } = useUIStore();
@@ -77,7 +95,68 @@ export function ScenarioBar() {
     setCreating(true);
     try {
       const created = await scenarioApi.create({ name: newName.trim() });
-      setScenario(created.id, created.name);
+      const id = created.id;
+
+      // Provision defaults so the Inputs page always loads fully hydrated.
+      const currentYear = new Date().getFullYear();
+
+      // Assumptions
+      const assumptions = await assumptionsApi.upsert(id, {
+        inflation_rate: DEFAULT_INFLATION_RATE,
+        plan_to_age: DEFAULT_PLAN_TO_AGE,
+        filing_status: "married_filing_jointly",
+        current_income: 0,
+        desired_retirement_income: 0,
+        healthcare_annual_cost: 0,
+        enable_catchup_contributions: false,
+        enable_roth_ladder: false,
+        return_scenario: DEFAULT_RETURN_SCENARIO,
+      });
+
+      // Persons
+      const primary = await personApi.create(id, {
+        role: "primary",
+        birth_year: currentYear - DEFAULT_PRIMARY_AGE_OFFSET,
+        birth_month: 1,
+        planned_retirement_age: DEFAULT_RETIREMENT_AGE,
+        current_income: 0,
+      });
+      const spouse = await personApi.create(id, {
+        role: "spouse",
+        birth_year: currentYear - DEFAULT_SPOUSE_AGE_OFFSET,
+        birth_month: 1,
+        planned_retirement_age: DEFAULT_RETIREMENT_AGE,
+        current_income: 0,
+      });
+
+      // Accounts + contributions
+      for (const type of ACCOUNT_TYPES) {
+        const base = SCENARIO_BASE_RETURNS[DEFAULT_RETURN_SCENARIO][type];
+        const account = await accountApi.upsert(id, {
+          account_type: type,
+          current_balance: 0,
+          return_conservative: Math.max(0, base - 0.03),
+          return_base: base,
+          return_optimistic: base + 0.03,
+        });
+        const contrib = await contributionApi.upsert(account.id, {
+          annual_amount: 0,
+          employer_match_amount: 0,
+          enforce_irs_limits: true,
+          solve_mode: "fixed",
+        });
+        setAccount(account);
+        setContribution(contrib);
+      }
+
+      // Hydrate store — setScenario first to establish the active scenario id,
+      // then populate data. markClean() at the end since these are fresh defaults,
+      // not user edits.
+      setScenario(id, created.name);
+      setAssumptions(assumptions);
+      setPrimary(primary);
+      setSpouse(spouse);
+      markClean();
       clearResults();
       setNewName("");
       setDialogOpen(false);

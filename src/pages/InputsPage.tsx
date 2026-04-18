@@ -37,6 +37,15 @@ import { useInputStore } from "../store/inputStore";
 import { useUIStore } from "../store/uiStore";
 import type { AccountType, AssumptionsCreate } from "../types";
 import { ACCOUNT_COLORS as HEX_COLORS } from "../constants/colors";
+import {
+  DEFAULT_INFLATION_RATE,
+  DEFAULT_PLAN_TO_AGE,
+  DEFAULT_PRIMARY_AGE_OFFSET,
+  DEFAULT_RETIREMENT_AGE,
+  DEFAULT_RETURN_SCENARIO,
+  DEFAULT_SPOUSE_AGE_OFFSET,
+  SCENARIO_BASE_RETURNS,
+} from "../constants/defaults";
 
 // ---------------------------------------------------------------------------
 // Section wrapper
@@ -229,31 +238,7 @@ const ACCOUNT_TYPES: AccountType[] = [
   "roth_401k",
 ];
 
-// Default base returns by account type and return scenario.
-// Conservative/optimistic are always ±3% from base (mirrors handleReturnChange).
-const SCENARIO_BASE_RETURNS: Record<string, Record<AccountType, number>> = {
-  conservative: {
-    hysa: 0.03,
-    brokerage: 0.05,
-    roth_ira: 0.05,
-    traditional_401k: 0.05,
-    roth_401k: 0.05,
-  },
-  base: {
-    hysa: 0.04,
-    brokerage: 0.07,
-    roth_ira: 0.07,
-    traditional_401k: 0.07,
-    roth_401k: 0.07,
-  },
-  optimistic: {
-    hysa: 0.05,
-    brokerage: 0.10,
-    roth_ira: 0.10,
-    traditional_401k: 0.10,
-    roth_401k: 0.10,
-  },
-};
+// Default base returns imported from src/constants/defaults.ts
 
 interface AccountRowProps {
   accountType: AccountType;
@@ -263,7 +248,7 @@ function AccountRow({ accountType }: AccountRowProps) {
   const { accounts, setAccount, scenarioId } = useInputStore();
   const account = accounts[accountType];
   const balance = account?.current_balance ?? 0;
-  const returnBase = account?.return_base ?? 0.07;
+  const returnBase = account?.return_base ?? SCENARIO_BASE_RETURNS.base[accountType];
 
   const handleBalanceChange = (val: number) => {
     if (!account || !scenarioId) return;
@@ -356,19 +341,19 @@ export function InputsPage() {
 
   // Local person fields (birth years, retirement ages, individual incomes)
   const [primaryBirthYear, setPrimaryBirthYear] = useState(
-    primary?.birth_year ?? new Date().getFullYear() - 45
+    primary?.birth_year ?? new Date().getFullYear() - DEFAULT_PRIMARY_AGE_OFFSET
   );
   const [primaryRetireAge, setPrimaryRetireAge] = useState(
-    primary?.planned_retirement_age ?? 55
+    primary?.planned_retirement_age ?? DEFAULT_RETIREMENT_AGE
   );
   const [primaryIncome, setPrimaryIncome] = useState(
     primary?.current_income ?? 0
   );
   const [spouseBirthYear, setSpouseBirthYear] = useState(
-    spouse?.birth_year ?? new Date().getFullYear() - 41
+    spouse?.birth_year ?? new Date().getFullYear() - DEFAULT_SPOUSE_AGE_OFFSET
   );
   const [spouseRetireAge, setSpouseRetireAge] = useState(
-    spouse?.planned_retirement_age ?? 55
+    spouse?.planned_retirement_age ?? DEFAULT_RETIREMENT_AGE
   );
   const [spouseIncome, setSpouseIncome] = useState(
     spouse?.current_income ?? 0
@@ -376,14 +361,14 @@ export function InputsPage() {
 
   // Sync local person fields when store hydrates (scenario load/duplicate/switch)
   useEffect(() => {
-    setPrimaryBirthYear(primary?.birth_year ?? new Date().getFullYear() - 45);
-    setPrimaryRetireAge(primary?.planned_retirement_age ?? 55);
+    setPrimaryBirthYear(primary?.birth_year ?? new Date().getFullYear() - DEFAULT_PRIMARY_AGE_OFFSET);
+    setPrimaryRetireAge(primary?.planned_retirement_age ?? DEFAULT_RETIREMENT_AGE);
     setPrimaryIncome(primary?.current_income ?? 0);
   }, [primary]);
 
   useEffect(() => {
-    setSpouseBirthYear(spouse?.birth_year ?? new Date().getFullYear() - 41);
-    setSpouseRetireAge(spouse?.planned_retirement_age ?? 55);
+    setSpouseBirthYear(spouse?.birth_year ?? new Date().getFullYear() - DEFAULT_SPOUSE_AGE_OFFSET);
+    setSpouseRetireAge(spouse?.planned_retirement_age ?? DEFAULT_RETIREMENT_AGE);
     setSpouseIncome(spouse?.current_income ?? 0);
   }, [spouse]);
 
@@ -675,7 +660,7 @@ export function InputsPage() {
                 setPrimaryBirthYear(Number(e.target.value));
                 markDirty();
               }}
-              InputProps={{ inputProps: { min: 1940, max: 2000 } }}
+              InputProps={{ inputProps: { min: 1940, max: 2007 } }}
               size="small"
             />
           </Grid2>
@@ -689,7 +674,7 @@ export function InputsPage() {
                 setSpouseBirthYear(Number(e.target.value));
                 markDirty();
               }}
-              InputProps={{ inputProps: { min: 1940, max: 2000 } }}
+              InputProps={{ inputProps: { min: 1940, max: 2007 } }}
               size="small"
             />
           </Grid2>
@@ -743,11 +728,11 @@ export function InputsPage() {
           </Grid2>
           <Grid2 size={{ xs: 12, sm: 6 }}>
             <FieldLabel
-              label={`Plan Through Age: ${assumptions?.plan_to_age ?? 90}`}
+              label={`Plan Through Age: ${assumptions?.plan_to_age ?? DEFAULT_PLAN_TO_AGE}`}
               info="Portfolio longevity target. 90–95 is a common conservative choice."
             />
             <Slider
-              value={assumptions?.plan_to_age ?? 90}
+              value={assumptions?.plan_to_age ?? DEFAULT_PLAN_TO_AGE}
               onChange={(_, v) => updateAssumption("plan_to_age", v as number)}
               min={80}
               max={100}
@@ -794,7 +779,7 @@ export function InputsPage() {
           <Grid2 size={{ xs: 12, sm: 6 }}>
             <PercentInput
               label="Inflation Rate"
-              value={assumptions?.inflation_rate ?? 0.03}
+              value={assumptions?.inflation_rate ?? DEFAULT_INFLATION_RATE}
               onChange={(v) => updateAssumption("inflation_rate", v)}
               info="Annual inflation assumption. 2.5–3.5% is typical."
             />
@@ -803,7 +788,7 @@ export function InputsPage() {
             <FormControl fullWidth size="small">
               <InputLabel>Return Scenario</InputLabel>
               <Select
-                value={assumptions?.return_scenario ?? "base"}
+                value={assumptions?.return_scenario ?? DEFAULT_RETURN_SCENARIO}
                 label="Return Scenario"
                 onChange={(e) =>
                   updateAssumption(
